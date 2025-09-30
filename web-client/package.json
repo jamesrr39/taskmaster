@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "generate-openapi": "openapi-codegen gen projectsApp"
+    "generate-openapi": "openapi-codegen gen taskmaster"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.51.21",

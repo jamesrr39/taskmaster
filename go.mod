@@ -1,4 +1,4 @@
-module github.com/jamesrr39/projects-app
+module github.com/jamesrr39/taskmaster
 
 go 1.23.1
 

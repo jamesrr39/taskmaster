@@ -5,8 +5,8 @@ import (
 
 	"github.com/jamesrr39/go-openapix"
 
-	"github.com/jamesrr39/projects-app/dal"
-	"github.com/jamesrr39/projects-app/domain"
+	"github.com/jamesrr39/taskmaster/dal"
+	"github.com/jamesrr39/taskmaster/domain"
 
 	"github.com/swaggest/rest/nethttp"
 )
@@ -14,21 +14,21 @@ import (
 type EmptyStruct struct{}
 
 type ListProjectsResponse struct {
-	Projects []domain.Project `json:"projects" nullable:"false" required:"true"`
+	Tasks []*domain.Task `json:"tasks" nullable:"false" required:"true"`
 }
 
-func GetAllProjects(d *dal.ProjectScanner, baseDir string) *nethttp.Handler {
+func GetAllProjects(d *dal.TaskDAL, baseDir string) *nethttp.Handler {
 	return openapix.MustCreateOpenapiEndpoint(
-		"Get projects listing",
+		"Get tasks",
 		&openapix.HandlerOptions{},
 		func(ctx context.Context, input *EmptyStruct, output *ListProjectsResponse) error {
 
-			err := d.ScanForProjects(baseDir)
+			tasks, err := d.GetAll()
 			if err != nil {
 				return err
 			}
 
-			output.Projects = d.Projects
+			output.Tasks = tasks
 
 			return nil
 		},

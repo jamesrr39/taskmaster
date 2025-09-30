@@ -8,9 +8,8 @@ import (
 	"time"
 
 	"github.com/jamesrr39/go-errorsx"
-	"github.com/jamesrr39/projects-app/dal"
-	"github.com/jamesrr39/projects-app/domain"
-	"github.com/jamesrr39/projects-app/webservices"
+	"github.com/jamesrr39/taskmaster/dal"
+	"github.com/jamesrr39/taskmaster/webservices"
 	"gopkg.in/alecthomas/kingpin.v2"
 
 	"github.com/joho/godotenv"
@@ -20,7 +19,7 @@ var app *kingpin.Application
 
 func main() {
 	godotenv.Load()
-	app = kingpin.New("projects app", "")
+	app = kingpin.New("taskmaster", "")
 
 	setupStatus()
 	setupGenerateOpenapiSpec()
@@ -75,15 +74,15 @@ func setupGenerateOpenapiSpec() {
 
 func setupServe() {
 	cmd := app.Command("serve", "")
-	filePath := cmd.Arg("filepath", "").Required().String()
+	filePath := cmd.Flag("filepath", "").Default(".").String()
 	addr := cmd.Flag("addr", "").Default("localhost:8080").String()
 
 	cmd.Action(func(pc *kingpin.ParseContext) error {
 		var err error
 
-		projectScanner := dal.ProjectScanner{Projects: []domain.Project{}}
+		taskDAL := dal.NewTaskDAL(*filePath)
 
-		router, _ := webservices.CreateRouter(&projectScanner, *filePath)
+		router, _ := webservices.CreateRouter(taskDAL, *filePath)
 
 		server := &http.Server{
 			Addr:           *addr,
@@ -104,20 +103,19 @@ func setupServe() {
 }
 
 func setupStatus() {
-
 	cmd := app.Command("status", "")
-	filePath := cmd.Arg("filepath", "").Required().String()
+	filePath := cmd.Flag("filepath", "").Default(".").String()
 
 	cmd.Action(func(pc *kingpin.ParseContext) error {
 		var err error
 
-		projectScanner := dal.ProjectScanner{Projects: []domain.Project{}}
-		err = projectScanner.ScanForProjects(*filePath)
+		taskDAL := dal.NewTaskDAL(*filePath)
+		tasks, err := taskDAL.GetAll()
 		if err != nil {
 			return errorsx.ErrWithStack(errorsx.Wrap(err))
 		}
 
-		b, err := json.MarshalIndent(projectScanner.Projects, "", "\t")
+		b, err := json.MarshalIndent(tasks, "", "\t")
 		if err != nil {
 			return errorsx.ErrWithStack(errorsx.Wrap(err))
 		}

@@ -1,9 +1,9 @@
-export type ProjectsAppFetcherExtraProps = {
+export type TaskmasterFetcherExtraProps = {
   /**
    * You can add some extra props to your generated fetchers.
    *
    * Note: You need to re-gen after adding the first property to
-   * have the `ProjectsAppFetcherExtraProps` injected in `ProjectsAppComponents.ts`
+   * have the `TaskmasterFetcherExtraProps` injected in `TaskmasterComponents.ts`
    **/
 };
 
@@ -13,7 +13,7 @@ export type ErrorWrapper<TError> =
   | TError
   | { status: "unknown"; payload: string };
 
-export type ProjectsAppFetcherOptions<
+export type TaskmasterFetcherOptions<
   TBody,
   THeaders,
   TQueryParams,
@@ -26,9 +26,9 @@ export type ProjectsAppFetcherOptions<
   queryParams?: TQueryParams;
   pathParams?: TPathParams;
   signal?: AbortSignal;
-} & ProjectsAppFetcherExtraProps;
+} & TaskmasterFetcherExtraProps;
 
-export async function projectsAppFetch<
+export async function taskmasterFetch<
   TData,
   TError,
   TBody extends {} | FormData | undefined | null,
@@ -43,7 +43,7 @@ export async function projectsAppFetch<
   pathParams,
   queryParams,
   signal,
-}: ProjectsAppFetcherOptions<
+}: TaskmasterFetcherOptions<
   TBody,
   THeaders,
   TQueryParams,

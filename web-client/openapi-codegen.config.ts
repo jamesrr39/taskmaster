@@ -6,7 +6,7 @@ import {
   forceReactQueryComponent,
 } from "@openapi-codegen/typescript";
 
-const projectName = "projectsApp";
+const projectName = "taskmaster";
 
 import { defineConfig } from "@openapi-codegen/cli";
 export default defineConfig({

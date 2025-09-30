@@ -2,7 +2,7 @@ import "./app.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ErrorBoundary, LocationProvider, Route, Router, useLocation } from "preact-iso";
 import { useEffect } from "preact/hooks";
-import ProjectListing from "./ui/listing/ProjectListing";
+import TaskListing from "./ui/listing/TaskListing";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,8 +41,8 @@ function LoadedApp() {
   return (
       <div className="container">
         <Router>
-          <Route path="/projects" component={ProjectListing} />
-          <Route path="/" component={() => <Redirect to={"/projects"} />} />
+          <Route path="/tasks" component={TaskListing} />
+          <Route path="/" component={() => <Redirect to={"/tasks"} />} />
           <NotFound default />
         </Router>
       </div>

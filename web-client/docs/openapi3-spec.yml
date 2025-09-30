@@ -1,15 +1,15 @@
 openapi: 3.0.3
 info:
-  description: REST API definitions for Projects App
-  title: Projects
+  description: REST API definitions for Taskmaster
+  title: Taskmaster
   version: "0"
 servers:
 - description: API server
   url: /api
 paths:
-  /v1/projects:
+  /v1/tasks:
     get:
-      operationId: getProjectsListing
+      operationId: getTasks
       responses:
         "200":
           content:
@@ -17,62 +17,35 @@ paths:
               schema:
                 $ref: '#/components/schemas/ListProjectsResponse'
           description: OK
-      summary: Get projects listing
+      summary: Get tasks
 components:
   schemas:
-    GitHead:
+    LogConfig:
       properties:
-        text:
+        compression:
           type: string
+      required:
+      - compression
       type: object
-    GitRemote:
+    Task:
       properties:
-        mirror:
-          type: boolean
+        log:
+          $ref: '#/components/schemas/LogConfig'
         name:
           type: string
-        urls:
-          items:
-            type: string
-          type: array
-      required:
-      - urls
-      type: object
-    GitStats:
-      properties:
-        head:
-          $ref: '#/components/schemas/GitHead'
-        remotes:
-          items:
-            $ref: '#/components/schemas/GitRemote'
-          type: array
-        status:
-          $ref: '#/components/schemas/GitStatus'
-      required:
-      - head
-      - status
-      - remotes
-      type: object
-    GitStatus:
-      properties:
-        clean:
-          type: boolean
-      type: object
-    Project:
-      properties:
-        filePath:
+        script:
           type: string
-        gitStats:
-          $ref: '#/components/schemas/GitStats'
       required:
-      - gitStats
+      - name
+      - script
+      - log
       type: object
     ListProjectsResponse:
       properties:
-        projects:
+        tasks:
           items:
-            $ref: '#/components/schemas/Project'
+            $ref: '#/components/schemas/Task'
           type: array
       required:
-      - projects
+      - tasks
       type: object

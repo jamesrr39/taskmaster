@@ -8,14 +8,14 @@ help:
 .PHONY: generate_openapi_typescript
 generate_openapi_typescript:
 	mkdir -p ${OPENAPI_SPEC_OUTDIR}
-	go run projects-app-main.go generate-openapi-spec --output ${OPENAPI_SPEC_PATH}
+	go run tasks-app-main.go generate-openapi-spec --output ${OPENAPI_SPEC_PATH}
 	sed -i 's/Domain//g' ${OPENAPI_SPEC_PATH}
 	sed -i 's/Webservices//g' ${OPENAPI_SPEC_PATH}
 	cd web-client && mkdir -p src/openapi/generated && rm -f src/openapi/generated/* && echo "running yarn generate-openapi" && yarn generate-openapi
 
 .PHONY: run_dev_server
 run_dev_server:
-	go run projects-app-main.go serve ~/src
+	go run tasks-app-main.go serve --filepath data/localdev
 
 .PHONY: run_dev_client
 run_dev_client:

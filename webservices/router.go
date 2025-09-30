@@ -10,13 +10,13 @@ import (
 	"github.com/swaggest/rest/openapi"
 	"github.com/swaggest/rest/response/gzip"
 
-	"github.com/jamesrr39/projects-app/dal"
+	"github.com/jamesrr39/taskmaster/dal"
 	"github.com/swaggest/swgui/v3cdn"
 )
 
-func CreateRouter(projectScanner *dal.ProjectScanner, baseDir string) (*chirouter.Wrapper, *openapi.Collector) {
+func CreateRouter(taskDAL *dal.TaskDAL, baseDir string) (*chirouter.Wrapper, *openapi.Collector) {
 
-	apiSchema, apiRouter := CreateApiRouter(projectScanner, baseDir)
+	apiSchema, apiRouter := CreateApiRouter(taskDAL, baseDir)
 
 	rootRouter := chirouter.NewWrapper(chi.NewRouter())
 

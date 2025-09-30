@@ -3,7 +3,7 @@ package webservices
 import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jamesrr39/go-openapix"
-	"github.com/jamesrr39/projects-app/dal"
+	"github.com/jamesrr39/taskmaster/dal"
 	"github.com/swaggest/openapi-go/openapi3"
 	"github.com/swaggest/rest"
 	"github.com/swaggest/rest/chirouter"
@@ -14,10 +14,10 @@ import (
 	"github.com/swaggest/rest/response"
 )
 
-func CreateApiRouter(projectScanner *dal.ProjectScanner, baseDir string) (*openapi.Collector, *chirouter.Wrapper) {
+func CreateApiRouter(taskDAL *dal.TaskDAL, baseDir string) (*openapi.Collector, *chirouter.Wrapper) {
 	apiSchema := &openapi.Collector{}
-	apiSchema.Reflector().SpecEns().Info.Title = "Projects"
-	apiSchema.Reflector().SpecEns().Info.WithDescription("REST API definitions for Projects App")
+	apiSchema.Reflector().SpecEns().Info.Title = "Taskmaster"
+	apiSchema.Reflector().SpecEns().Info.WithDescription("REST API definitions for Taskmaster")
 
 	serverDesc := "API server"
 
@@ -43,7 +43,7 @@ func CreateApiRouter(projectScanner *dal.ProjectScanner, baseDir string) (*opena
 	)
 
 	apiRouter.Route("/v1", func(r chi.Router) {
-		openapix.Get(r, "/projects", GetAllProjects(projectScanner, baseDir))
+		openapix.Get(r, "/tasks", GetAllProjects(taskDAL, baseDir))
 	})
 
 	// check array types are marked as non-null; i.e. no items will return "[]" instead of "null"

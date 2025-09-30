@@ -1,7 +1,7 @@
 import type { QueryKey, UseQueryOptions } from "@tanstack/react-query";
-import { QueryOperation } from "./projectsAppComponents";
+import { QueryOperation } from "./taskmasterComponents";
 
-export type ProjectsAppContext = {
+export type TaskmasterContext = {
   fetcherOptions: {
     /**
      * Headers to inject in the fetcher
@@ -30,7 +30,7 @@ export type ProjectsAppContext = {
  *
  * @param queryOptions options from the useQuery wrapper
  */
-export function useProjectsAppContext<
+export function useTaskmasterContext<
   TQueryFnData = unknown,
   TError = unknown,
   TData = TQueryFnData,
@@ -40,7 +40,7 @@ export function useProjectsAppContext<
     UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>,
     "queryKey" | "queryFn"
   >,
-): ProjectsAppContext {
+): TaskmasterContext {
   return {
     fetcherOptions: {},
     queryOptions: {},
