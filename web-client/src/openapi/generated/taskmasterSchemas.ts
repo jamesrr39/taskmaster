@@ -3,16 +3,17 @@
  *
  * @version 0
  */
-export type LogConfig = {
+export type TaskrunnerLogConfig = {
   compression: string;
 };
 
-export type Task = {
-  log: LogConfig;
-  name: string;
-  script: string;
+export type TaskrunnerTask = {
+  description?: string;
+  log: TaskrunnerLogConfig;
+  name?: string;
+  script?: string;
 };
 
 export type ListProjectsResponse = {
-  tasks: Task[];
+  tasks: TaskrunnerTask[];
 };

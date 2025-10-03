@@ -6,7 +6,7 @@ import (
 	"github.com/jamesrr39/go-openapix"
 
 	"github.com/jamesrr39/taskmaster/dal"
-	"github.com/jamesrr39/taskmaster/domain"
+	"github.com/jamesrr39/taskmaster/taskrunner"
 
 	"github.com/swaggest/rest/nethttp"
 )
@@ -14,7 +14,7 @@ import (
 type EmptyStruct struct{}
 
 type ListProjectsResponse struct {
-	Tasks []*domain.Task `json:"tasks" nullable:"false" required:"true"`
+	Tasks []*taskrunner.Task `json:"tasks" nullable:"false" required:"true"`
 }
 
 func GetAllProjects(d *dal.TaskDAL, baseDir string) *nethttp.Handler {

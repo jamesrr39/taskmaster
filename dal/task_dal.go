@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/jamesrr39/go-errorsx"
-	"github.com/jamesrr39/taskmaster/domain"
+	"github.com/jamesrr39/taskmaster/taskrunner"
 	"gopkg.in/yaml.v2"
 )
 
@@ -18,14 +18,14 @@ func NewTaskDAL(basePath string) *TaskDAL {
 	return &TaskDAL{basePath}
 }
 
-func (d *TaskDAL) GetAll() ([]*domain.Task, errorsx.Error) {
+func (d *TaskDAL) GetAll() ([]*taskrunner.Task, errorsx.Error) {
 	tasksDirPath := filepath.Join(d.basePath, "tasks")
 	entries, err := os.ReadDir(tasksDirPath)
 	if err != nil {
 		return nil, errorsx.Wrap(err, "tasksDirPath", tasksDirPath)
 	}
 
-	tasks := []*domain.Task{}
+	tasks := []*taskrunner.Task{}
 	for _, entry := range entries {
 		taskFilePath := filepath.Join(tasksDirPath, entry.Name())
 		task, err := readTaskFile(taskFilePath)
@@ -37,14 +37,14 @@ func (d *TaskDAL) GetAll() ([]*domain.Task, errorsx.Error) {
 	return tasks, nil
 }
 
-func readTaskFile(taskFilePath string) (*domain.Task, errorsx.Error) {
+func readTaskFile(taskFilePath string) (*taskrunner.Task, errorsx.Error) {
 	f, err := os.Open(taskFilePath)
 	if err != nil {
 		return nil, errorsx.Wrap(err, "taskFilePath", taskFilePath)
 	}
 	defer f.Close()
 
-	task := new(domain.Task)
+	task := new(taskrunner.Task)
 	err = yaml.NewDecoder(f).Decode(task)
 	if err != nil {
 		return nil, errorsx.Wrap(err, "taskFilePath", taskFilePath)

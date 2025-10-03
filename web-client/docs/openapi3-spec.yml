@@ -20,31 +20,31 @@ paths:
       summary: Get tasks
 components:
   schemas:
-    LogConfig:
+    TaskrunnerLogConfig:
       properties:
         compression:
           type: string
       required:
       - compression
       type: object
-    Task:
+    TaskrunnerTask:
       properties:
+        description:
+          type: string
         log:
-          $ref: '#/components/schemas/LogConfig'
+          $ref: '#/components/schemas/TaskrunnerLogConfig'
         name:
           type: string
         script:
           type: string
       required:
-      - name
-      - script
       - log
       type: object
     ListProjectsResponse:
       properties:
         tasks:
           items:
-            $ref: '#/components/schemas/Task'
+            $ref: '#/components/schemas/TaskrunnerTask'
           type: array
       required:
       - tasks

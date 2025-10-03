@@ -21,13 +21,20 @@ function TaskListing() {
         <div>
             <h1>Tasks</h1>
             <table className={"table table-striped"}>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Compression</th>
+                        <th>Script</th>
+                    </tr>
+                </thead>
                 <tbody>
                 {data.tasks.map((task, idx) => {
                     return (
                         <tr key={idx}>
                             <td>{task.name}</td>
                             <td>{task.log.compression}</td>
-                            <td>{task.script}</td>
+                            <td><pre style={{alignItems: 'left'}}>{task.script}</pre></td>
                         </tr>
                     )
                 })}
