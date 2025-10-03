@@ -15,7 +15,7 @@ generate_openapi_typescript:
 
 .PHONY: run_dev_server
 run_dev_server:
-	go run tasks-app-main.go serve --filepath data/localdev
+	go run tasks-app-main.go serve --path data/localdev
 
 .PHONY: run_dev_client
 run_dev_client:

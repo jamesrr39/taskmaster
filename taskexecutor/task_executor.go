@@ -2,7 +2,7 @@ package taskexecutor
 
 import (
 	"io"
-	"io/ioutil"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"time"
@@ -14,7 +14,7 @@ const TASKRUNNER_SOURCE_NAME string = "TASKRUNNER"
 
 func ExecuteJobRun(jobRun *taskrunner.TaskRun, jobRunStatusChangeChan chan *taskrunner.TaskRun, logFile io.Writer, workspaceDir string, providesNow NowProvider) error {
 	scriptFilePath := filepath.Join(workspaceDir, "script")
-	err := ioutil.WriteFile(scriptFilePath, []byte(jobRun.Task.Script), 0500)
+	err := os.WriteFile(scriptFilePath, []byte(jobRun.Task.Script), 0500)
 	if nil != err {
 		return handleTaskrunnerError("Couldn't prepare and move to workspace. Error: "+err.Error(), logFile, jobRunStatusChangeChan, jobRun, providesNow)
 	}

@@ -74,7 +74,7 @@ func setupGenerateOpenapiSpec() {
 
 func setupServe() {
 	cmd := app.Command("serve", "")
-	filePath := cmd.Flag("filepath", "").Default(".").String()
+	filePath := addFilePathFlag(cmd)
 	addr := cmd.Flag("addr", "").Default("localhost:8080").String()
 
 	cmd.Action(func(pc *kingpin.ParseContext) error {
@@ -104,7 +104,7 @@ func setupServe() {
 
 func setupStatus() {
 	cmd := app.Command("status", "")
-	filePath := cmd.Flag("filepath", "").Default(".").String()
+	filePath := addFilePathFlag(cmd)
 
 	cmd.Action(func(pc *kingpin.ParseContext) error {
 		var err error
@@ -123,4 +123,8 @@ func setupStatus() {
 		os.Stdout.Write(b)
 		return nil
 	})
+}
+
+func addFilePathFlag(cmd *kingpin.CmdClause) *string {
+	return cmd.Flag("path", "Path to Taskmaster directory").Short('C').Default(".").String()
 }
