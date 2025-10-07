@@ -12,22 +12,23 @@ import (
 
 const TASKRUNNER_SOURCE_NAME string = "TASKRUNNER"
 
-func ExecuteJobRun(jobRun *taskrunner.TaskRun, jobRunStatusChangeChan chan *taskrunner.TaskRun, logFile io.Writer, workspaceDir string, providesNow NowProvider) error {
+func ExecuteJobRun(taskRun *taskrunner.TaskRun, taskRunStatusChangeChan chan *taskrunner.TaskRun, logFile io.Writer, workspaceDir string, providesNow NowProvider) error {
+	panic("write to temp dir")
 	scriptFilePath := filepath.Join(workspaceDir, "script")
-	err := os.WriteFile(scriptFilePath, []byte(jobRun.Task.Script), 0500)
+	err := os.WriteFile(scriptFilePath, []byte(taskRun.Task.Script), 0500)
 	if nil != err {
-		return handleTaskrunnerError("Couldn't prepare and move to workspace. Error: "+err.Error(), logFile, jobRunStatusChangeChan, jobRun, providesNow)
+		return handleTaskrunnerError("Couldn't prepare and move to workspace. Error: "+err.Error(), logFile, taskRunStatusChangeChan, taskRun, providesNow)
 	}
 
 	cmd := exec.Command(scriptFilePath)
 	stdoutPipe, err := cmd.StdoutPipe()
 	if nil != err {
-		return handleTaskrunnerError("Couldn't obtain stdoutpipe. Error: "+err.Error(), logFile, jobRunStatusChangeChan, jobRun, providesNow)
+		return handleTaskrunnerError("Couldn't obtain stdoutpipe. Error: "+err.Error(), logFile, taskRunStatusChangeChan, taskRun, providesNow)
 	}
 
 	stderrPipe, err := cmd.StderrPipe()
 	if nil != err {
-		return handleTaskrunnerError("Couldn't obtain stderrpipe. Error: "+err.Error(), logFile, jobRunStatusChangeChan, jobRun, providesNow)
+		return handleTaskrunnerError("Couldn't obtain stderrpipe. Error: "+err.Error(), logFile, taskRunStatusChangeChan, taskRun, providesNow)
 	}
 
 	go writeToLogFile(stdoutPipe, logFile, "STDOUT", providesNow)
@@ -35,7 +36,7 @@ func ExecuteJobRun(jobRun *taskrunner.TaskRun, jobRunStatusChangeChan chan *task
 
 	err = cmd.Start()
 	if nil != err {
-		return handleTaskrunnerError("Couldn't start script. Error: "+err.Error(), logFile, jobRunStatusChangeChan, jobRun, providesNow)
+		return handleTaskrunnerError("Couldn't start script. Error: "+err.Error(), logFile, taskRunStatusChangeChan, taskRun, providesNow)
 
 	}
 
@@ -43,15 +44,15 @@ func ExecuteJobRun(jobRun *taskrunner.TaskRun, jobRunStatusChangeChan chan *task
 	if nil != err {
 		switch err.(type) {
 		case *exec.ExitError:
-			jobRun.State = taskrunner.JOB_RUN_STATE_FAILED
+			taskRun.State = taskrunner.JOB_RUN_STATE_FAILED
 		default:
-			jobRun.State = taskrunner.JOB_RUN_STATE_UNKNOWN
+			taskRun.State = taskrunner.JOB_RUN_STATE_UNKNOWN
 		}
 	} else {
-		jobRun.State = taskrunner.JOB_RUN_STATE_SUCCESS
+		taskRun.State = taskrunner.JOB_RUN_STATE_SUCCESS
 	}
-	jobRun.EndTimestamp = time.Now().Unix()
-	jobRunStatusChangeChan <- jobRun
+	taskRun.EndTimestamp = time.Now().Unix()
+	taskRunStatusChangeChan <- taskRun
 
 	return nil
 }

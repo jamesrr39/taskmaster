@@ -21,7 +21,8 @@ func main() {
 	godotenv.Load()
 	app = kingpin.New("taskmaster", "")
 
-	setupStatus()
+	setupListTasks()
+	setupRunTask()
 	setupGenerateOpenapiSpec()
 	setupServe()
 
@@ -80,7 +81,7 @@ func setupServe() {
 	cmd.Action(func(pc *kingpin.ParseContext) error {
 		var err error
 
-		taskDAL := dal.NewTaskDAL(*filePath)
+		taskDAL := dal.NewTaskDAL(*filePath, provideNow)
 
 		router, _ := webservices.CreateRouter(taskDAL, *filePath)
 
@@ -102,14 +103,14 @@ func setupServe() {
 	})
 }
 
-func setupStatus() {
-	cmd := app.Command("status", "")
+func setupListTasks() {
+	cmd := app.Command("list-tasks", "")
 	filePath := addFilePathFlag(cmd)
 
 	cmd.Action(func(pc *kingpin.ParseContext) error {
 		var err error
 
-		taskDAL := dal.NewTaskDAL(*filePath)
+		taskDAL := dal.NewTaskDAL(*filePath, provideNow)
 		tasks, err := taskDAL.GetAll()
 		if err != nil {
 			return errorsx.ErrWithStack(errorsx.Wrap(err))
@@ -125,6 +126,35 @@ func setupStatus() {
 	})
 }
 
+func setupRunTask() {
+	cmd := app.Command("run-task", "")
+	filePath := addFilePathFlag(cmd)
+	taskName := cmd.Arg("taskName", "").Required().String()
+
+	cmd.Action(func(pc *kingpin.ParseContext) error {
+		var err error
+
+		taskDAL := dal.NewTaskDAL(*filePath, provideNow)
+		task, err := taskDAL.GetByName(*taskName)
+		if err != nil {
+			return errorsx.ErrWithStack(errorsx.Wrap(err))
+		}
+
+		taskRun, err := taskDAL.RunTask(task)
+		if err != nil {
+			return errorsx.ErrWithStack(errorsx.Wrap(err))
+		}
+
+		json.NewEncoder(os.Stdout).Encode(taskRun)
+
+		return nil
+	})
+}
+
 func addFilePathFlag(cmd *kingpin.CmdClause) *string {
 	return cmd.Flag("path", "Path to Taskmaster directory").Short('C').Default(".").String()
+}
+
+func provideNow() time.Time {
+	return time.Now()
 }
