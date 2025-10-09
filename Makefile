@@ -8,14 +8,14 @@ help:
 .PHONY: generate_openapi_typescript
 generate_openapi_typescript:
 	mkdir -p ${OPENAPI_SPEC_OUTDIR}
-	go run tasks-app-main.go generate-openapi-spec --output ${OPENAPI_SPEC_PATH}
+	go run taskmaster-main.go generate-openapi-spec --output ${OPENAPI_SPEC_PATH}
 	sed -i 's/Domain//g' ${OPENAPI_SPEC_PATH}
 	sed -i 's/Webservices//g' ${OPENAPI_SPEC_PATH}
 	cd web-client && mkdir -p src/openapi/generated && rm -f src/openapi/generated/* && echo "running yarn generate-openapi" && yarn generate-openapi
 
 .PHONY: run_dev_server
 run_dev_server:
-	go run tasks-app-main.go serve --path data/localdev
+	go run taskmaster-main.go serve --path data/localdev
 
 .PHONY: run_dev_client
 run_dev_client:
@@ -24,3 +24,10 @@ run_dev_client:
 .PHONY: release
 release:
 	goreleaser release --clean
+
+.PHONY: check_modernc_libc_version
+check_modernc_libc_version:
+# https://pkg.go.dev/modernc.org/sqlite#section-readme
+# When you import this package you should use in your go.mod file the exact same version of modernc.org/libc as seen in the go.mod file of this repository.
+# grep returns exit code 0 if found, 1 if not found
+	grep "modernc.org/libc v1.66.3" go.mod

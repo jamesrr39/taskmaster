@@ -16,7 +16,7 @@ type Task struct {
 
 func NewTask(id uint, name string, description string, script Script) (*Task, error) {
 	if name == "" {
-		return nil, errors.New("A task must have a name")
+		return nil, errors.New("a task must have a name")
 	}
 
 	return &Task{Id: id, Name: name, Description: description, Script: script}, nil
