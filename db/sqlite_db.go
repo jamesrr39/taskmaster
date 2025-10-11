@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/jamesrr39/go-errorsx"
+	"github.com/jmoiron/sqlx"
 	"github.com/pressly/goose/v3"
 	"github.com/pressly/goose/v3/database"
 	_ "modernc.org/sqlite"
@@ -16,14 +17,8 @@ var embedMigrations embed.FS
 
 const migrationsDir = "migrations"
 
-func RunMigrations(dataDir string) errorsx.Error {
-
-	dbFilePath := filepath.Join(dataDir, "taskmaster-db.sqlite3")
-
-	db, err := sql.Open("sqlite", dbFilePath)
-	if err != nil {
-		return errorsx.Wrap(err)
-	}
+func RunMigrations(db *sql.DB) errorsx.Error {
+	var err error
 
 	goose.SetBaseFS(embedMigrations)
 
@@ -38,4 +33,15 @@ func RunMigrations(dataDir string) errorsx.Error {
 	}
 
 	return nil
+}
+
+func OpenDB(filePath string) (*sqlx.DB, errorsx.Error) {
+	dbFilePath := filepath.Join(filePath, "data", "taskmaster-db.sqlite3")
+
+	db, err := sqlx.Open("sqlite", dbFilePath)
+	if err != nil {
+		return nil, errorsx.Wrap(err)
+	}
+
+	return db, nil
 }

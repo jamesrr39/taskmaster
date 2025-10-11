@@ -1,15 +1,14 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE task_runs (
-    id BIGINT NOT NULL PRIMARY KEY,
+    run_number BIGINT NOT NULL PRIMARY KEY,
     task_name TEXT NOT NULL,
-    start_time TIMESTAMP NOT NULL,
-    status INT NOT NULL
+    start_time BIGINT NOT NULL
 );
 
 CREATE TABLE task_runs_results (
     task_run_id BIGINT NOT NULL PRIMARY KEY,
-    end_time TIMESTAMP NOT NULL,
+    end_time BIGINT NOT NULL,
     exit_code INT NOT NULL,
     logs_compression TEXT NOT NULL,
     logs_raw_size BIGINT NOT NULL,

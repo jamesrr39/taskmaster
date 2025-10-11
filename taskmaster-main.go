@@ -137,13 +137,18 @@ func setupRunTask() {
 	cmd.Action(func(pc *kingpin.ParseContext) error {
 		var err error
 
+		dbConn, err := db.OpenDB(*filePath)
+		if err != nil {
+			return errorsx.ErrWithStack(errorsx.Wrap(err))
+		}
+
 		taskDAL := dal.NewTaskDAL(*filePath, provideNow)
 		task, err := taskDAL.GetByName(*taskName)
 		if err != nil {
 			return errorsx.ErrWithStack(errorsx.Wrap(err))
 		}
 
-		taskRun, err := taskDAL.RunTask(task)
+		taskRun, err := taskDAL.RunTask(dbConn, task)
 		if err != nil {
 			return errorsx.ErrWithStack(errorsx.Wrap(err))
 		}
@@ -172,7 +177,12 @@ func setupUpgradeVersion() {
 			return errorsx.ErrWithStack(err)
 		}
 
-		err = db.RunMigrations(filepath.Join(*filePath, "data"))
+		dbc, err := db.OpenDB(*filePath)
+		if err != nil {
+			return errorsx.Wrap(err)
+		}
+
+		err = db.RunMigrations(dbc.DB)
 		if err != nil {
 			return errorsx.ErrWithStack(err)
 		}

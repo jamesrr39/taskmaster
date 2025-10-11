@@ -30,6 +30,10 @@ github.com/jamesrr39/go-openapix
 # github.com/jamesrr39/goutil v0.0.0-20240329225739-244c41ec945f
 ## explicit; go 1.18
 github.com/jamesrr39/goutil/httpextra
+# github.com/jmoiron/sqlx v1.4.0
+## explicit; go 1.10
+github.com/jmoiron/sqlx
+github.com/jmoiron/sqlx/reflectx
 # github.com/joho/godotenv v1.5.1
 ## explicit; go 1.12
 github.com/joho/godotenv

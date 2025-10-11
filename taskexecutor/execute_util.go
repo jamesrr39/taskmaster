@@ -2,6 +2,7 @@ package taskexecutor
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"time"
@@ -23,10 +24,20 @@ func writeStringToLogFile(text string, writer io.Writer, sourceName string, nowP
 func writeToLogFile(pipe io.Reader, writer io.Writer, sourceName string, nowProvider NowProvider) error {
 	pipeScanner := bufio.NewScanner(pipe)
 	for pipeScanner.Scan() {
-		_, err := writer.Write([]byte(getFormattedTime(nowProvider()) + ": " + sourceName + ": " + pipeScanner.Text() + "\n"))
+		now := nowProvider()
+		entry := LogEntry{
+			Timestamp: Timestamp(now),
+			Text:      pipeScanner.Text(),
+		}
+		err := json.NewEncoder(writer).Encode(entry)
 		if nil != err {
 			return err
 		}
 	}
 	return nil
+}
+
+type LogEntry struct {
+	Timestamp Timestamp `json:"timestamp"`
+	Text      string    `json:"text"`
 }
