@@ -43,5 +43,10 @@ func OpenDB(filePath string) (*sqlx.DB, errorsx.Error) {
 		return nil, errorsx.Wrap(err)
 	}
 
+	_, err = db.Exec("PRAGMA foreign_keys=true")
+	if err != nil {
+		return nil, errorsx.Wrap(err)
+	}
+
 	return db, nil
 }

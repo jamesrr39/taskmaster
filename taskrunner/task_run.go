@@ -1,7 +1,5 @@
 package taskrunner
 
-import "time"
-
 type JobRunState int
 
 const (
@@ -36,10 +34,10 @@ func (e JobRunState) IsFinished() bool {
 }
 
 type TaskRun struct {
-	RunNumber      uint64      `json:"runNumber" db:"run_number"`
+	RunNumber      uint64      `json:"runNumber" db:"task_run_number"`
 	State          JobRunState `json:"status"`
-	StartTimestamp time.Time   `json:"startTimestamp" db:"start_time"`
-	EndTimestamp   *time.Time  `json:"endTimestamp,omitempty"`
+	StartTimestamp Timestamp   `json:"startTimestamp" db:"start_time"`
+	EndTimestamp   *Timestamp  `json:"endTimestamp,omitempty"`
 	Task           *Task       `json:"-"`
 	Pid            *int        `json:"pid"`      // nil for not started
 	ExitCode       *int        `json:"exitCode"` // nil for not started
@@ -61,7 +59,7 @@ func (task *Task) NewTaskRun() *TaskRun {
 	return &TaskRun{
 		RunNumber:      0,
 		State:          JOB_RUN_STATE_NOT_STARTED,
-		StartTimestamp: time.Time{},
+		StartTimestamp: Timestamp{},
 		EndTimestamp:   nil,
 		Task:           task,
 		Pid:            nil,

@@ -1,4 +1,4 @@
-package taskexecutor
+package taskrunner
 
 import (
 	"database/sql/driver"

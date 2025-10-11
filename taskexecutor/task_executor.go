@@ -31,8 +31,8 @@ func ExecuteJobRun(taskRun *taskrunner.TaskRun, taskRunStatusChangeChan chan *ta
 		return handleTaskrunnerError("Couldn't obtain stderrpipe. Error: "+err.Error(), logFile, taskRunStatusChangeChan, taskRun, providesNow)
 	}
 
-	go writeToLogFile(stdoutPipe, logFile, "STDOUT", providesNow)
-	go writeToLogFile(stderrPipe, logFile, "STDERR", providesNow)
+	go writeToLogFile(stdoutPipe, logFile, SourceTaskmasterStdout, providesNow)
+	go writeToLogFile(stderrPipe, logFile, SourceTaskmasterStderr, providesNow)
 
 	err = cmd.Start()
 	if nil != err {
@@ -54,7 +54,7 @@ func ExecuteJobRun(taskRun *taskrunner.TaskRun, taskRunStatusChangeChan chan *ta
 		exitCode := 0
 		taskRun.ExitCode = &exitCode
 	}
-	now := providesNow()
+	now := taskrunner.Timestamp(providesNow())
 	taskRun.EndTimestamp = &now
 
 	if taskRunStatusChangeChan != nil {
@@ -65,7 +65,7 @@ func ExecuteJobRun(taskRun *taskrunner.TaskRun, taskRunStatusChangeChan chan *ta
 }
 
 func handleTaskrunnerError(errorMessage string, logFile io.Writer, jobRunStateChan chan *taskrunner.TaskRun, jobRun *taskrunner.TaskRun, providesNow NowProvider) errorsx.Error {
-	now := providesNow()
+	now := taskrunner.Timestamp(providesNow())
 	jobRun.EndTimestamp = &now
 	jobRun.State = taskrunner.JOB_RUN_STATE_FAILED
 	if jobRunStateChan != nil {

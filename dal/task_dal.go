@@ -54,24 +54,24 @@ func (d *TaskDAL) GetByName(name string) (*taskrunner.Task, errorsx.Error) {
 
 func (d *TaskDAL) createTaskRun(dbConn db.DBConn, task *taskrunner.Task) (*taskrunner.TaskRun, errorsx.Error) {
 	taskRun := task.NewTaskRun()
-	taskRun.StartTimestamp = time.Now()
+	taskRun.StartTimestamp = taskrunner.Timestamp(time.Now())
 
 	type responseType struct {
-		RunNumber uint64 `db:"run_number"`
+		RunNumber uint64 `db:"task_run_number"`
 		StartTime int64  `db:"start_time"`
 	}
 	response := new(responseType)
 
 	err := dbConn.Get(
 		response,
-		`INSERT INTO task_runs (run_number, task_name, start_time)
+		`INSERT INTO task_runs (task_name, task_run_number, start_time)
 		VALUES (
-			(SELECT COALESCE(MAX(run_number), 0) +1 FROM task_runs WHERE task_name = $1),
 			$1,
+			(SELECT COALESCE(MAX(task_run_number), 0) +1 FROM task_runs WHERE task_name = $1),
 			$2
 		)
-		RETURNING run_number`,
-		task.Name, taskRun.StartTimestamp.UnixNano())
+		RETURNING task_run_number`,
+		task.Name, taskRun.StartTimestamp)
 	if err != nil {
 		return nil, errorsx.Wrap(err)
 	}
@@ -79,6 +79,20 @@ func (d *TaskDAL) createTaskRun(dbConn db.DBConn, task *taskrunner.Task) (*taskr
 	taskRun.RunNumber = response.RunNumber
 
 	return taskRun, nil
+}
+
+func (d *TaskDAL) insertTaskRunResults(dbConn db.DBConn, taskRun *taskrunner.TaskRun) errorsx.Error {
+	_, err := dbConn.Exec(
+		`INSERT INTO task_runs_results (task_name, task_run_number, end_time, exit_code)
+		VALUES ($1, $2, $3, $4);
+		`,
+		taskRun.Task.Name, taskRun.RunNumber, taskRun.EndTimestamp, taskRun.ExitCode,
+	)
+	if err != nil {
+		return errorsx.Wrap(err)
+	}
+
+	return nil
 }
 
 func (d *TaskDAL) RunTask(dbConn db.DBConn, task *taskrunner.Task) (*taskrunner.TaskRun, errorsx.Error) {
@@ -109,6 +123,11 @@ func (d *TaskDAL) RunTask(dbConn db.DBConn, task *taskrunner.Task) (*taskrunner.
 	defer logFile.Close()
 
 	err = taskexecutor.ExecuteJobRun(taskRun, nil, logFile, taskRunTempDir, d.nowProvider)
+	if err != nil {
+		return nil, errorsx.Wrap(err, "taskRun", taskRun)
+	}
+
+	err = d.insertTaskRunResults(dbConn, taskRun)
 	if err != nil {
 		return nil, errorsx.Wrap(err, "taskRun", taskRun)
 	}

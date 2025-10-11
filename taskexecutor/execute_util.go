@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"time"
+
+	"github.com/jamesrr39/taskmaster/taskrunner"
 )
 
 func getFormattedTime(now time.Time) string {
@@ -13,11 +15,11 @@ func getFormattedTime(now time.Time) string {
 	return fmt.Sprintf("%02d:%02d:%02d.%03d", now.Hour(), now.Minute(), now.Second(), milliSeconds)
 }
 
-func writeStringToLogFile(text string, writer io.Writer, sourceName Source, nowProvider NowProvider) error {
+func writeStringToLogFile(text string, writer io.Writer, sourceName SourceID, nowProvider NowProvider) error {
 
 	now := nowProvider()
 	entry := LogEntry{
-		Timestamp: Timestamp(now),
+		Timestamp: taskrunner.Timestamp(now),
 		Text:      text,
 		Source:    sourceName,
 	}
@@ -29,7 +31,7 @@ func writeStringToLogFile(text string, writer io.Writer, sourceName Source, nowP
 	return nil
 }
 
-func writeToLogFile(pipe io.Reader, writer io.Writer, sourceName Source, nowProvider NowProvider) error {
+func writeToLogFile(pipe io.Reader, writer io.Writer, sourceName SourceID, nowProvider NowProvider) error {
 	pipeScanner := bufio.NewScanner(pipe)
 	for pipeScanner.Scan() {
 		err := writeStringToLogFile(pipeScanner.Text(), writer, sourceName, nowProvider)
@@ -46,16 +48,27 @@ func writeToLogFile(pipe io.Reader, writer io.Writer, sourceName Source, nowProv
 	return nil
 }
 
-type Source string
+type SourceID int
 
 const (
-	SourceTaskmasterHarness Source = "TASKMASTER_HARNESS"
-	SourceTaskmasterStdout  Source = "STDOUT"
-	SourceTaskmasterStderr  Source = "STDERR"
+	SourceTaskmasterHarness SourceID = 1
+	SourceTaskmasterStdout  SourceID = 2
+	SourceTaskmasterStderr  SourceID = 3
 )
 
+var sourceNames = []string{
+	"UNKNOWN",
+	"TASKMASTER_HARNESS",
+	"STDOUT",
+	"STDERR",
+}
+
+func (s SourceID) String() string {
+	return sourceNames[int(s)]
+}
+
 type LogEntry struct {
-	Timestamp Timestamp `json:"timestamp"`
-	Text      string    `json:"text"`
-	Source    Source    `json:"source"`
+	Timestamp taskrunner.Timestamp `json:"timestamp"`
+	Text      string               `json:"text"`
+	Source    SourceID             `json:"source"`
 }
