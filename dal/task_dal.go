@@ -1,11 +1,14 @@
 package dal
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/jamesrr39/go-errorsx"
+	"github.com/jamesrr39/taskmaster/db"
 	"github.com/jamesrr39/taskmaster/taskexecutor"
 	"github.com/jamesrr39/taskmaster/taskrunner"
 	"gopkg.in/yaml.v2"
@@ -49,24 +52,63 @@ func (d *TaskDAL) GetByName(name string) (*taskrunner.Task, errorsx.Error) {
 	return task, nil
 }
 
-func (d *TaskDAL) createTaskRun(task *taskrunner.Task) (*taskrunner.TaskRun, errorsx.Error) {
-	panic("not implemented")
+func (d *TaskDAL) createTaskRun(dbConn db.DBConn, task *taskrunner.Task) (*taskrunner.TaskRun, errorsx.Error) {
+	taskRun := task.NewTaskRun()
+	taskRun.StartTimestamp = time.Now()
+
+	type responseType struct {
+		RunNumber uint64 `db:"run_number"`
+		StartTime int64  `db:"start_time"`
+	}
+	response := new(responseType)
+
+	err := dbConn.Get(
+		response,
+		`INSERT INTO task_runs (run_number, task_name, start_time)
+		VALUES (
+			(SELECT COALESCE(MAX(run_number), 0) +1 FROM task_runs WHERE task_name = $1),
+			$1,
+			$2
+		)
+		RETURNING run_number`,
+		task.Name, taskRun.StartTimestamp.UnixNano())
+	if err != nil {
+		return nil, errorsx.Wrap(err)
+	}
+
+	taskRun.RunNumber = response.RunNumber
+
+	return taskRun, nil
 }
 
-func (d *TaskDAL) RunTask(task *taskrunner.Task) (*taskrunner.TaskRun, errorsx.Error) {
+func (d *TaskDAL) RunTask(dbConn db.DBConn, task *taskrunner.Task) (*taskrunner.TaskRun, errorsx.Error) {
 	var err error
 
-	taskRun, err := d.createTaskRun(task)
+	taskRun, err := d.createTaskRun(dbConn, task)
 	if err != nil {
 		return nil, errorsx.Wrap(err, "taskRun", taskRun)
 	}
 
-	workDir, err := os.Getwd()
+	taskRunTempDir, err := os.MkdirTemp("", "")
 	if err != nil {
 		return nil, errorsx.Wrap(err, "taskRun", taskRun)
 	}
 
-	err = taskexecutor.ExecuteJobRun(taskRun, nil, os.Stderr, workDir, d.nowProvider)
+	taskRunDir := filepath.Join(d.basePath, "data", task.Name, "runs", fmt.Sprintf("%d", taskRun.RunNumber))
+	err = os.MkdirAll(taskRunDir, 0755)
+	if err != nil {
+		return nil, errorsx.Wrap(err, "taskRun", taskRun, "taskRunDir", taskRunDir)
+	}
+
+	logFilePath := filepath.Join(taskRunDir, "log.txt")
+
+	logFile, err := os.Create(logFilePath)
+	if err != nil {
+		return nil, errorsx.Wrap(err, "taskRun", taskRun)
+	}
+	defer logFile.Close()
+
+	err = taskexecutor.ExecuteJobRun(taskRun, nil, logFile, taskRunTempDir, d.nowProvider)
 	if err != nil {
 		return nil, errorsx.Wrap(err, "taskRun", taskRun)
 	}

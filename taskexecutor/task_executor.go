@@ -2,18 +2,18 @@ package taskexecutor
 
 import (
 	"io"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"time"
 
+	"github.com/jamesrr39/go-errorsx"
 	"github.com/jamesrr39/taskmaster/taskrunner"
 )
 
-const TASKRUNNER_SOURCE_NAME string = "TASKRUNNER"
-
 func ExecuteJobRun(taskRun *taskrunner.TaskRun, taskRunStatusChangeChan chan *taskrunner.TaskRun, logFile io.Writer, workspaceDir string, providesNow NowProvider) error {
-	panic("write to temp dir")
+	slog.Info("running job", "workspaceDir", workspaceDir, "taskRun", taskRun)
+
 	scriptFilePath := filepath.Join(workspaceDir, "script")
 	err := os.WriteFile(scriptFilePath, []byte(taskRun.Task.Script), 0500)
 	if nil != err {
@@ -37,33 +37,43 @@ func ExecuteJobRun(taskRun *taskrunner.TaskRun, taskRunStatusChangeChan chan *ta
 	err = cmd.Start()
 	if nil != err {
 		return handleTaskrunnerError("Couldn't start script. Error: "+err.Error(), logFile, taskRunStatusChangeChan, taskRun, providesNow)
-
 	}
 
 	err = cmd.Wait()
 	if nil != err {
-		switch err.(type) {
+		switch exitErr := err.(type) {
 		case *exec.ExitError:
 			taskRun.State = taskrunner.JOB_RUN_STATE_FAILED
+			exitCode := exitErr.ExitCode()
+			taskRun.ExitCode = &exitCode
 		default:
 			taskRun.State = taskrunner.JOB_RUN_STATE_UNKNOWN
 		}
 	} else {
 		taskRun.State = taskrunner.JOB_RUN_STATE_SUCCESS
+		exitCode := 0
+		taskRun.ExitCode = &exitCode
 	}
-	taskRun.EndTimestamp = time.Now().Unix()
-	taskRunStatusChangeChan <- taskRun
+	now := providesNow()
+	taskRun.EndTimestamp = &now
+
+	if taskRunStatusChangeChan != nil {
+		taskRunStatusChangeChan <- taskRun
+	}
 
 	return nil
 }
 
-func handleTaskrunnerError(errorMessage string, logFile io.Writer, jobRunStateChan chan *taskrunner.TaskRun, jobRun *taskrunner.TaskRun, providesNow NowProvider) error {
-	jobRun.EndTimestamp = providesNow().Unix()
+func handleTaskrunnerError(errorMessage string, logFile io.Writer, jobRunStateChan chan *taskrunner.TaskRun, jobRun *taskrunner.TaskRun, providesNow NowProvider) errorsx.Error {
+	now := providesNow()
+	jobRun.EndTimestamp = &now
 	jobRun.State = taskrunner.JOB_RUN_STATE_FAILED
-	jobRunStateChan <- jobRun
-	err := writeStringToLogFile(errorMessage, logFile, TASKRUNNER_SOURCE_NAME, providesNow)
+	if jobRunStateChan != nil {
+		jobRunStateChan <- jobRun
+	}
+	err := writeStringToLogFile(errorMessage, logFile, SourceTaskmasterHarness, providesNow)
 	if nil != err {
-		return err
+		return errorsx.Wrap(err)
 	}
 	return nil
 }

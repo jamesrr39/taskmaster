@@ -27,9 +27,9 @@ func Test_ExecuteJobRun(t *testing.T) {
 
 	jobRunStateChan := make(chan *taskrunner.TaskRun)
 
-	task, err := taskrunner.NewTask(0, "my task", "the big task", "#!/bin/bash\n\necho 'task failed'\nexit 1")
+	task, err := taskrunner.NewTask("my task", "the big task", "#!/bin/bash\n\necho 'task failed'\nexit 1")
 	assert.Nil(t, err)
-	jobRun := task.NewTaskRun("test trigger")
+	jobRun := task.NewTaskRun()
 
 	jobRunStateGoRoutineDoneChan := make(chan bool)
 
@@ -53,9 +53,9 @@ func Test_handleTaskrunnerError(t *testing.T) {
 	logFile := bytes.NewBuffer(nil)
 	jobRunStateChan := make(chan *taskrunner.TaskRun)
 
-	task, err := taskrunner.NewTask(0, "my task", "the big task", "#!/bin/bash\n\necho 'my task'")
+	task, err := taskrunner.NewTask("my task", "the big task", "#!/bin/bash\n\necho 'my task'")
 	assert.Nil(t, err)
-	jobRun := task.NewTaskRun("test trigger")
+	jobRun := task.NewTaskRun()
 
 	var newJobRunState *taskrunner.TaskRun
 	go func() {

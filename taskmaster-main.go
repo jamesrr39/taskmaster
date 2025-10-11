@@ -196,7 +196,7 @@ func createDirStructure(baseDir string) errorsx.Error {
 	tasks := []createDirStructureTask{
 		func() error { return os.MkdirAll(filepath.Join(baseDir, "tasks"), 0755) },
 		func() error { return os.MkdirAll(filepath.Join(baseDir, "data"), 0755) },
-		func() error { return os.MkdirAll(filepath.Join(baseDir, "data", "logs"), 0755) },
+		// func() error { return os.MkdirAll(filepath.Join(baseDir, "data", "logs"), 0755) },
 	}
 
 	for _, task := range tasks {
