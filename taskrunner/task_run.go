@@ -41,18 +41,6 @@ type TaskRun struct {
 	EndTimestamp   *Timestamp  `json:"endTimestamp,omitempty" db:"end_time"`
 	Pid            *int        `json:"pid"`                     // nil for not started
 	ExitCode       *int        `json:"exitCode" db:"exit_code"` // nil for not started
-	Logs           JobRunLogs  `json:"logs" required:"true"`
-}
-
-type JobRunLogs struct {
-	LogConfig LogConfig `json:"logConfig"`
-	Stderr    LogFile   `json:"stderr" required:"true"`
-	Stdout    LogFile   `json:"stdout" required:"true"`
-}
-
-type LogFile struct {
-	RawSize        uint64 `json:"rawSize"`
-	CompressedSize uint64 `json:"compressedSize"`
 }
 
 func (task *Task) NewTaskRun(runNumber uint64, startTimestamp Timestamp) *TaskRun {
