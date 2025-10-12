@@ -11,11 +11,11 @@ import (
 	"github.com/jamesrr39/taskmaster/taskrunner"
 )
 
-func ExecuteJobRun(taskRun *taskrunner.TaskRun, taskRunStatusChangeChan chan *taskrunner.TaskRun, logFile io.Writer, workspaceDir string, providesNow NowProvider) error {
+func ExecuteJobRun(task *taskrunner.Task, taskRun *taskrunner.TaskRun, taskRunStatusChangeChan chan *taskrunner.TaskRun, logFile io.Writer, workspaceDir string, providesNow NowProvider) error {
 	slog.Info("running job", "workspaceDir", workspaceDir, "taskRun", taskRun)
 
 	scriptFilePath := filepath.Join(workspaceDir, "script")
-	err := os.WriteFile(scriptFilePath, []byte(taskRun.Task.Script), 0500)
+	err := os.WriteFile(scriptFilePath, []byte(task.Script), 0500)
 	if nil != err {
 		return handleTaskrunnerError("Couldn't prepare and move to workspace. Error: "+err.Error(), logFile, taskRunStatusChangeChan, taskRun, providesNow)
 	}

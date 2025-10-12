@@ -34,13 +34,13 @@ func (e JobRunState) IsFinished() bool {
 }
 
 type TaskRun struct {
+	TaskName       string      `json:"taskName" db:"task_name"`
 	RunNumber      uint64      `json:"runNumber" db:"task_run_number"`
 	State          JobRunState `json:"status"`
 	StartTimestamp Timestamp   `json:"startTimestamp" db:"start_time"`
-	EndTimestamp   *Timestamp  `json:"endTimestamp,omitempty"`
-	Task           *Task       `json:"-"`
-	Pid            *int        `json:"pid"`      // nil for not started
-	ExitCode       *int        `json:"exitCode"` // nil for not started
+	EndTimestamp   *Timestamp  `json:"endTimestamp,omitempty" db:"end_time"`
+	Pid            *int        `json:"pid"`                     // nil for not started
+	ExitCode       *int        `json:"exitCode" db:"exit_code"` // nil for not started
 	Logs           JobRunLogs  `json:"logs" required:"true"`
 }
 
@@ -55,13 +55,13 @@ type LogFile struct {
 	CompressedSize uint64 `json:"compressedSize"`
 }
 
-func (task *Task) NewTaskRun() *TaskRun {
+func (task *Task) NewTaskRun(runNumber uint64, startTimestamp Timestamp) *TaskRun {
 	return &TaskRun{
-		RunNumber:      0,
+		RunNumber:      runNumber,
 		State:          JOB_RUN_STATE_NOT_STARTED,
-		StartTimestamp: Timestamp{},
+		StartTimestamp: startTimestamp,
 		EndTimestamp:   nil,
-		Task:           task,
+		TaskName:       task.Name,
 		Pid:            nil,
 		ExitCode:       nil,
 	}
