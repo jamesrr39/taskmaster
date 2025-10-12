@@ -243,7 +243,7 @@ func MustJSONPrettyPrint(writer io.Writer, obj interface{}) {
 		panic(fmt.Sprintf("couldn't pretty print JSON. Error: %s", err))
 	}
 
-	_, err = writer.Write(b)
+	_, err = writer.Write(append(b, byte('\n')))
 	if err != nil {
 		panic(fmt.Sprintf("couldn't write to writer. Error: %s", err))
 	}
