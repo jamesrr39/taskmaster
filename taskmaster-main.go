@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -154,7 +156,7 @@ func setupRunTask() {
 			return errorsx.ErrWithStack(errorsx.Wrap(err))
 		}
 
-		json.NewEncoder(os.Stdout).Encode(taskRun)
+		MustJSONPrettyPrint(os.Stdout, taskRun)
 
 		return nil
 	})
@@ -180,12 +182,7 @@ func setupGetTaskRunResult() {
 			return errorsx.ErrWithStack(errorsx.Wrap(err))
 		}
 
-		// taskRun, err := taskDAL.RunTask(dbConn, task)
-		// if err != nil {
-		// 	return errorsx.ErrWithStack(errorsx.Wrap(err))
-		// }
-
-		json.NewEncoder(os.Stdout).Encode(taskRun)
+		MustJSONPrettyPrint(os.Stdout, taskRun)
 
 		return nil
 	})
@@ -238,4 +235,16 @@ func createDirStructure(baseDir string) errorsx.Error {
 	}
 
 	return nil
+}
+
+func MustJSONPrettyPrint(writer io.Writer, obj interface{}) {
+	b, err := json.MarshalIndent(obj, "", "\t")
+	if err != nil {
+		panic(fmt.Sprintf("couldn't pretty print JSON. Error: %s", err))
+	}
+
+	_, err = writer.Write(b)
+	if err != nil {
+		panic(fmt.Sprintf("couldn't write to writer. Error: %s", err))
+	}
 }
