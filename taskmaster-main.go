@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/jamesrr39/go-errorsx"
@@ -100,7 +101,7 @@ func setupServe() {
 			MaxHeaderBytes: 1 << 20,
 		}
 
-		slog.Info("serving", "address", *addr)
+		slog.Info("serving", "address", makeHttpLink(*addr), "Openapi/Swagger address", fmt.Sprintf("%s/docs", makeHttpLink(*addr)))
 		err = server.ListenAndServe()
 		if err != nil {
 			return errorsx.ErrWithStack(errorsx.Wrap(err))
@@ -273,4 +274,12 @@ func MustJSONPrettyPrint(writer io.Writer, obj interface{}) {
 	if err != nil {
 		panic(fmt.Sprintf("couldn't write to writer. Error: %s", err))
 	}
+}
+
+func makeHttpLink(s string) string {
+	if strings.HasPrefix(s, "http://") || strings.HasPrefix(s, "https://") {
+		return s
+	}
+
+	return "http://" + s
 }
