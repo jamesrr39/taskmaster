@@ -22,6 +22,9 @@ builds:
       - linux
       - windows
       - darwin
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    flags:
+      - -trimpath
 
 archives:
   - format: tar.gz
