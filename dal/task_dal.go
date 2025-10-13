@@ -119,7 +119,7 @@ func (d *TaskDAL) GetTaskRun(dbConn db.DBConn, taskName string, taskRunNumber ui
 }
 
 func (d *TaskDAL) GetLogsTask(taskName string, runNumber uint64) (io.ReadCloser, errorsx.Error) {
-	filePath := filepath.Join(d.basePath, "data", "results", taskName, "runs", fmt.Sprintf("%d", runNumber), "logs.jsonl.zstd")
+	filePath := filepath.Join(d.basePath, "data", "results", taskName, "runs", fmt.Sprintf("%d", runNumber), "logs.jsonl.zst")
 
 	f, err := os.Open(filePath)
 	if err != nil {
@@ -167,7 +167,7 @@ func (d *TaskDAL) RunTask(dbConn db.DBConn, task *taskrunner.Task) (*taskrunner.
 		return nil, errorsx.Wrap(err, "taskRun", taskRun, "taskRunDir", taskRunDir)
 	}
 
-	logFilePath := filepath.Join(taskRunDir, "logs.jsonl.zstd")
+	logFilePath := filepath.Join(taskRunDir, "logs.jsonl.zst")
 
 	logFile, err := os.Create(logFilePath)
 	if err != nil {
