@@ -26,6 +26,7 @@ func main() {
 	godotenv.Load()
 	app = kingpin.New("taskmaster", "")
 
+	setupInit()
 	setupListTasks()
 	setupRunTask()
 	setupGenerateOpenapiSpec()
@@ -43,6 +44,15 @@ const (
 	SpecFormatJSON       = "json"
 	SpecFormatJSONPretty = "jsonpretty"
 )
+
+func setupInit() {
+	cmd := app.Command("init", "")
+	filePath := addFilePathFlag(cmd)
+	cmd.Action(func(pc *kingpin.ParseContext) error {
+		err := createDirStructure(*filePath)
+		return errorsx.ErrWithStack(err)
+	})
+}
 
 func setupGenerateOpenapiSpec() {
 
@@ -64,7 +74,7 @@ func setupGenerateOpenapiSpec() {
 
 		specMarshalFunc, ok := specMarshalFuncMap[*format]
 		if !ok {
-			return errorsx.Errorf("unknown format type: %q", *format)
+			return errorsx.ErrWithStack(errorsx.Errorf("unknown format type: %q", *format))
 		}
 
 		specBytes, err := specMarshalFunc()
