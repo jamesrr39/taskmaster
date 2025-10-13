@@ -7,7 +7,9 @@ require (
 	github.com/jamesrr39/go-errorsx v0.0.0-20240715215442-3c0d739e9f0f
 	github.com/jamesrr39/go-openapix v0.0.0-20240805224438-613a47dbccba
 	github.com/jamesrr39/goutil v0.0.0-20240329225739-244c41ec945f
+	github.com/jmoiron/sqlx v1.4.0
 	github.com/joho/godotenv v1.5.1
+	github.com/klauspost/compress v1.18.0
 	github.com/pressly/goose/v3 v3.26.0
 	github.com/stretchr/testify v1.11.1
 	github.com/swaggest/openapi-go v0.2.60
@@ -25,7 +27,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/jmoiron/sqlx v1.4.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mfridman/interpolate v0.0.2 // indirect

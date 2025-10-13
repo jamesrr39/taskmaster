@@ -31,6 +31,7 @@ func main() {
 	setupServe()
 	setupUpgradeVersion()
 	setupGetTaskRunResult()
+	setupGetTaskRunLogs()
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
@@ -188,6 +189,31 @@ func setupGetTaskRunResult() {
 	})
 }
 
+func setupGetTaskRunLogs() {
+	cmd := app.Command("logs", "")
+	filePath := addFilePathFlag(cmd)
+	taskName := cmd.Arg("taskName", "").Required().String()
+	runNumber := cmd.Arg("runNumber", "").Required().Uint64()
+
+	cmd.Action(func(pc *kingpin.ParseContext) error {
+		var err error
+
+		taskDAL := dal.NewTaskDAL(*filePath, provideNow)
+		logFile, err := taskDAL.GetLogsTask(*taskName, *runNumber)
+		if err != nil {
+			return errorsx.ErrWithStack(errorsx.Wrap(err))
+		}
+		defer logFile.Close()
+
+		_, err = io.Copy(os.Stdout, logFile)
+		if err != nil {
+			return errorsx.ErrWithStack(errorsx.Wrap(err))
+		}
+
+		return nil
+	})
+}
+
 func addFilePathFlag(cmd *kingpin.CmdClause) *string {
 	return cmd.Flag("path", "Path to Taskmaster directory").Short('C').Default(".").String()
 }
@@ -224,7 +250,7 @@ type createDirStructureTask func() error
 func createDirStructure(baseDir string) errorsx.Error {
 	tasks := []createDirStructureTask{
 		func() error { return os.MkdirAll(filepath.Join(baseDir, "tasks"), 0755) },
-		func() error { return os.MkdirAll(filepath.Join(baseDir, "data, results"), 0755) },
+		func() error { return os.MkdirAll(filepath.Join(baseDir, "data", "results"), 0755) },
 	}
 
 	for _, task := range tasks {

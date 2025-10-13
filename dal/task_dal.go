@@ -2,6 +2,8 @@ package dal
 
 import (
 	"fmt"
+	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +13,8 @@ import (
 	"github.com/jamesrr39/taskmaster/taskexecutor"
 	"github.com/jamesrr39/taskmaster/taskrunner"
 	"gopkg.in/yaml.v2"
+
+	"github.com/klauspost/compress/zstd"
 )
 
 type TaskDAL struct {
@@ -114,6 +118,36 @@ func (d *TaskDAL) GetTaskRun(dbConn db.DBConn, taskName string, taskRunNumber ui
 	return taskRun, nil
 }
 
+func (d *TaskDAL) GetLogsTask(taskName string, runNumber uint64) (io.ReadCloser, errorsx.Error) {
+	filePath := filepath.Join(d.basePath, "data", "results", taskName, "runs", fmt.Sprintf("%d", runNumber), "logs.jsonl.zstd")
+
+	f, err := os.Open(filePath)
+	if err != nil {
+		return nil, errorsx.Wrap(err, "filePath", filePath)
+	}
+
+	decoder, err := zstd.NewReader(f)
+	if err != nil {
+		return nil, errorsx.Wrap(err, "filePath", filePath)
+	}
+
+	return zstdReadCloser{f, decoder}, nil
+}
+
+type zstdReadCloser struct {
+	file        io.ReadCloser
+	zstdDecoder *zstd.Decoder
+}
+
+func (z zstdReadCloser) Read(b []byte) (int, error) {
+	return z.zstdDecoder.Read(b)
+}
+
+func (z zstdReadCloser) Close() error {
+	z.zstdDecoder.Close()
+	return z.file.Close()
+}
+
 func (d *TaskDAL) RunTask(dbConn db.DBConn, task *taskrunner.Task) (*taskrunner.TaskRun, errorsx.Error) {
 	var err error
 
@@ -141,7 +175,23 @@ func (d *TaskDAL) RunTask(dbConn db.DBConn, task *taskrunner.Task) (*taskrunner.
 	}
 	defer logFile.Close()
 
-	err = taskexecutor.ExecuteJobRun(task, taskRun, nil, logFile, taskRunTempDir, d.nowProvider)
+	zstdWriter, err := zstd.NewWriter(logFile)
+	if err != nil {
+		return nil, errorsx.Wrap(err, "taskRun", taskRun)
+	}
+	defer func() {
+		err := zstdWriter.Flush()
+		if err != nil {
+			slog.Error("couldn't flush zstd writer", "taskRun", taskRun, "error", err)
+		}
+
+		err = zstdWriter.Close()
+		if err != nil {
+			slog.Error("couldn't close zstd writer", "taskRun", taskRun, "error", err)
+		}
+	}()
+
+	err = taskexecutor.ExecuteJobRun(task, taskRun, nil, zstdWriter, taskRunTempDir, d.nowProvider)
 	if err != nil {
 		return nil, errorsx.Wrap(err, "taskRun", taskRun)
 	}
