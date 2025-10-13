@@ -17,7 +17,7 @@ type ListProjectsResponse struct {
 	Tasks []*taskrunner.Task `json:"tasks" nullable:"false" required:"true"`
 }
 
-func GetAllProjects(d *dal.TaskDAL, baseDir string) *nethttp.Handler {
+func GetAllTasks(d *dal.TaskDAL, baseDir string) *nethttp.Handler {
 	return openapix.MustCreateOpenapiEndpoint(
 		"Get tasks",
 		&openapix.HandlerOptions{},
