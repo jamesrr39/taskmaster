@@ -9,11 +9,12 @@ import (
 	"github.com/jamesrr39/taskmaster/taskrunner"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_ExecuteJobRun(t *testing.T) {
 	workspaceDir, err := ioutil.TempDir("", "")
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	defer func() {
 		err := os.RemoveAll(workspaceDir)
 		if nil != err {
@@ -28,8 +29,8 @@ func Test_ExecuteJobRun(t *testing.T) {
 	jobRunStateChan := make(chan *taskrunner.TaskRun)
 
 	task, err := taskrunner.NewTask("my task", "the big task", "#!/bin/bash\n\necho 'task failed'\nexit 1")
-	assert.Nil(t, err)
-	jobRun := task.NewTaskRun()
+	require.NoError(t, err)
+	taskRun := task.NewTaskRun(1, taskrunner.Timestamp(mockNowProvider()))
 
 	jobRunStateGoRoutineDoneChan := make(chan bool)
 
@@ -39,8 +40,8 @@ func Test_ExecuteJobRun(t *testing.T) {
 		jobRunStateGoRoutineDoneChan <- true
 	}()
 
-	err = ExecuteJobRun(jobRun, jobRunStateChan, logFile, workspaceDir, mockNowProvider)
-	assert.Nil(t, err)
+	err = ExecuteJobRun(task, taskRun, jobRunStateChan, logFile, workspaceDir, mockNowProvider)
+	require.NoError(t, err)
 
 	<-jobRunStateGoRoutineDoneChan
 	assert.Equal(t, "03:04:05.006: STDOUT: task failed\n", string(logFile.Bytes()))
@@ -54,8 +55,8 @@ func Test_handleTaskrunnerError(t *testing.T) {
 	jobRunStateChan := make(chan *taskrunner.TaskRun)
 
 	task, err := taskrunner.NewTask("my task", "the big task", "#!/bin/bash\n\necho 'my task'")
-	assert.Nil(t, err)
-	jobRun := task.NewTaskRun()
+	require.NoError(t, err)
+	jobRun := task.NewTaskRun(1, taskrunner.Timestamp(mockNowProvider()))
 
 	var newJobRunState *taskrunner.TaskRun
 	go func() {
@@ -64,7 +65,7 @@ func Test_handleTaskrunnerError(t *testing.T) {
 	}()
 
 	err = handleTaskrunnerError(errorMessage, logFile, jobRunStateChan, jobRun, mockNowProvider)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, taskrunner.JOB_RUN_STATE_FAILED, newJobRunState.State)
 	assert.Equal(t, int64(946782245), newJobRunState.EndTimestamp)

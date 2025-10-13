@@ -7,10 +7,9 @@ import (
 type Script string
 
 type Task struct {
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Script      Script    `json:"script"`
-	Log         LogConfig `json:"log" required:"true"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Script      Script `json:"script"`
 }
 
 func NewTask(name string, description string, script Script) (*Task, error) {

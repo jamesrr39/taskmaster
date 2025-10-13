@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_getFormattedTime(t *testing.T) {
@@ -15,21 +16,20 @@ func Test_getFormattedTime(t *testing.T) {
 func Test_writeStringToLogFile(t *testing.T) {
 	byteBuffer := bytes.NewBuffer(nil)
 
-	writeStringToLogFile("task finished successfully", byteBuffer, "STDOUT", mockNowProvider)
+	writeStringToLogFile("task finished successfully", byteBuffer, SourceTaskmasterStdout, mockNowProvider)
 
-	assert.Equal(t, "03:04:05.006: STDOUT: task finished successfully\n", string(byteBuffer.Bytes()))
+	assert.Equal(t, "03:04:05.006: STDOUT: task finished successfully\n", byteBuffer.String())
 }
 
 func Test_writeToLogFile(t *testing.T) {
 	reader := bytes.NewBuffer(nil)
 	writer := bytes.NewBuffer(nil)
-	sourceName := "STDOUT"
 
 	_, err := reader.WriteString("task finished successfully")
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
-	err = writeToLogFile(reader, writer, sourceName, mockNowProvider)
-	assert.Nil(t, err)
+	err = writeToLogFile(reader, writer, SourceTaskmasterStdout, mockNowProvider)
+	require.NoError(t, err)
 
 	assert.Equal(t, "03:04:05.006: STDOUT: task finished successfully\n", string(writer.Bytes()))
 }
