@@ -167,7 +167,7 @@ func (d *TaskDAL) RunTask(dbConn db.DBConn, task *taskrunner.Task) (*taskrunner.
 		return nil, errorsx.Wrap(err, "taskRun", taskRun, "taskRunDir", taskRunDir)
 	}
 
-	logFilePath := filepath.Join(taskRunDir, "log.txt")
+	logFilePath := filepath.Join(taskRunDir, "logs.jsonl.zstd")
 
 	logFile, err := os.Create(logFilePath)
 	if err != nil {

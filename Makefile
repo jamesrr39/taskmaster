@@ -33,10 +33,14 @@ check_modernc_libc_version:
 	grep "modernc.org/libc v1.66.3" go.mod
 
 .PHONY: run_test_job
-run_test_job
+run_test_job:
 	go run taskmaster-main.go run-task --path data/localdev test-job
 
 .PHONY: reset_db
 reset_db:
 	rm data/localdev/data/taskmaster-db.sqlite3
+	go run taskmaster-main.go upgrade --path data/localdev
+
+.PHONY: upgrade
+upgrade:
 	go run taskmaster-main.go upgrade --path data/localdev
