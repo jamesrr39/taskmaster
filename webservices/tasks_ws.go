@@ -13,7 +13,7 @@ import (
 
 type EmptyStruct struct{}
 
-type ListProjectsResponse struct {
+type ListTasksResponse struct {
 	Tasks []*taskrunner.Task `json:"tasks" nullable:"false" required:"true"`
 }
 
@@ -21,7 +21,7 @@ func GetAllTasks(d *dal.TaskDAL, baseDir string) *nethttp.Handler {
 	return openapix.MustCreateOpenapiEndpoint(
 		"Get tasks",
 		&openapix.HandlerOptions{},
-		func(ctx context.Context, input *EmptyStruct, output *ListProjectsResponse) error {
+		func(ctx context.Context, input *EmptyStruct, output *ListTasksResponse) error {
 
 			tasks, err := d.GetAll()
 			if err != nil {

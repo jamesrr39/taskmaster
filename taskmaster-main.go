@@ -49,7 +49,7 @@ func setupInit() {
 	cmd := app.Command("init", "")
 	filePath := addFilePathFlag(cmd)
 	cmd.Action(func(pc *kingpin.ParseContext) error {
-		err := createDirStructure(*filePath)
+		err := setupFoldersAndDBAction(*filePath)
 		return errorsx.ErrWithStack(err)
 	})
 }
@@ -152,7 +152,9 @@ func setupRunTask() {
 	cmd.Action(func(pc *kingpin.ParseContext) error {
 		var err error
 
-		dbConn, err := db.OpenDB(*filePath)
+		dbFilePath := filepath.Join(*filePath, dal.DataFolderName, "taskmaster-db.sqlite3")
+
+		dbConn, err := db.OpenDB(dbFilePath)
 		if err != nil {
 			return errorsx.ErrWithStack(errorsx.Wrap(err))
 		}
@@ -183,7 +185,9 @@ func setupGetTaskRunResult() {
 	cmd.Action(func(pc *kingpin.ParseContext) error {
 		var err error
 
-		dbConn, err := db.OpenDB(*filePath)
+		dbFilePath := filepath.Join(*filePath, dal.DataFolderName, "taskmaster-db.sqlite3")
+
+		dbConn, err := db.OpenDB(dbFilePath)
 		if err != nil {
 			return errorsx.ErrWithStack(errorsx.Wrap(err))
 		}
@@ -237,23 +241,29 @@ func setupUpgradeVersion() {
 	cmd := app.Command("upgrade", "")
 	filePath := addFilePathFlag(cmd)
 	cmd.Action(func(pc *kingpin.ParseContext) error {
-
-		err := createDirStructure(*filePath)
-		if err != nil {
-			return errorsx.ErrWithStack(err)
-		}
-
-		dbc, err := db.OpenDB(*filePath)
-		if err != nil {
-			return errorsx.Wrap(err)
-		}
-
-		err = db.RunMigrations(dbc.DB)
-		if err != nil {
-			return errorsx.ErrWithStack(err)
-		}
-		return nil
+		err := setupFoldersAndDBAction(*filePath)
+		return errorsx.ErrWithStack(err)
 	})
+}
+
+func setupFoldersAndDBAction(filePath string) errorsx.Error {
+	err := createDirStructure(filePath)
+	if err != nil {
+		return errorsx.Wrap(err)
+	}
+
+	dbFilePath := filepath.Join(filePath, dal.DataFolderName, "taskmaster-db.sqlite3")
+
+	dbc, err := db.OpenDB(dbFilePath)
+	if err != nil {
+		return errorsx.Wrap(err)
+	}
+
+	err = db.RunMigrations(dbc.DB)
+	if err != nil {
+		return errorsx.Wrap(err)
+	}
+	return nil
 }
 
 type createDirStructureTask func() error
@@ -261,7 +271,7 @@ type createDirStructureTask func() error
 func createDirStructure(baseDir string) errorsx.Error {
 	tasks := []createDirStructureTask{
 		func() error { return os.MkdirAll(filepath.Join(baseDir, "tasks"), 0755) },
-		func() error { return os.MkdirAll(filepath.Join(baseDir, "data", "results"), 0755) },
+		func() error { return os.MkdirAll(filepath.Join(baseDir, dal.DataFolderName, "results"), 0755) },
 	}
 
 	for _, task := range tasks {

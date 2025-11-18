@@ -17,6 +17,10 @@ import (
 	"github.com/klauspost/compress/zstd"
 )
 
+const (
+	DataFolderName = "taskmaster-data"
+)
+
 type TaskDAL struct {
 	basePath    string
 	nowProvider taskexecutor.NowProvider
@@ -119,7 +123,7 @@ func (d *TaskDAL) GetTaskRun(dbConn db.DBConn, taskName string, taskRunNumber ui
 }
 
 func (d *TaskDAL) GetLogsTask(taskName string, runNumber uint64) (io.ReadCloser, errorsx.Error) {
-	filePath := filepath.Join(d.basePath, "data", "results", taskName, "runs", fmt.Sprintf("%d", runNumber), "logs.jsonl.zst")
+	filePath := filepath.Join(d.basePath, DataFolderName, "results", taskName, "runs", fmt.Sprintf("%d", runNumber), "logs.jsonl.zst")
 
 	f, err := os.Open(filePath)
 	if err != nil {
@@ -161,7 +165,7 @@ func (d *TaskDAL) RunTask(dbConn db.DBConn, task *taskrunner.Task) (*taskrunner.
 		return nil, errorsx.Wrap(err, "taskRun", taskRun)
 	}
 
-	taskRunDir := filepath.Join(d.basePath, "data", "results", task.Name, "runs", fmt.Sprintf("%d", taskRun.RunNumber))
+	taskRunDir := filepath.Join(d.basePath, DataFolderName, "results", task.Name, "runs", fmt.Sprintf("%d", taskRun.RunNumber))
 	err = os.MkdirAll(taskRunDir, 0755)
 	if err != nil {
 		return nil, errorsx.Wrap(err, "taskRun", taskRun, "taskRunDir", taskRunDir)

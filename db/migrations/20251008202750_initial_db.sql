@@ -10,7 +10,7 @@ CREATE TABLE task_runs_results (
     task_name TEXT NOT NULL,
     task_run_number BIGINT NOT NULL,
     end_time BIGINT NOT NULL,
-    exit_code INT NOT NULL,
+    exit_code INT, -- can be null if the task was unable to start
     FOREIGN KEY(task_name, task_run_number) REFERENCES task_runs(task_name, task_run_number)
 );
 

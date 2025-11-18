@@ -31,6 +31,8 @@ func ExecuteJobRun(task *taskrunner.Task, taskRun *taskrunner.TaskRun, taskRunSt
 		return handleTaskrunnerError("Couldn't obtain stderrpipe. Error: "+err.Error(), logFile, taskRunStatusChangeChan, taskRun, providesNow)
 	}
 
+	cmd.Stdin = os.Stdin
+
 	go writeToLogFile(stdoutPipe, logFile, SourceTaskmasterStdout, providesNow)
 	go writeToLogFile(stderrPipe, logFile, SourceTaskmasterStderr, providesNow)
 

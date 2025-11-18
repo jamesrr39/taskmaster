@@ -1,6 +1,6 @@
 # Added by goreleaser init:
 dist/
-
+/taskmaster
 
 # web client
 vite.config.ts.timestamp-*.mjs

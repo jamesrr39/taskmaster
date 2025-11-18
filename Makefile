@@ -25,6 +25,10 @@ run_dev_client:
 release:
 	goreleaser release --clean
 
+.PHONY: release_snapshot
+release_snapshot:
+	goreleaser build --snapshot --clean
+
 .PHONY: check_modernc_libc_version
 check_modernc_libc_version:
 # https://pkg.go.dev/modernc.org/sqlite#section-readme

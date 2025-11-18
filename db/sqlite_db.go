@@ -3,7 +3,6 @@ package db
 import (
 	"database/sql"
 	"embed"
-	"path/filepath"
 
 	"github.com/jamesrr39/go-errorsx"
 	"github.com/jmoiron/sqlx"
@@ -35,17 +34,16 @@ func RunMigrations(db *sql.DB) errorsx.Error {
 	return nil
 }
 
-func OpenDB(filePath string) (*sqlx.DB, errorsx.Error) {
-	dbFilePath := filepath.Join(filePath, "data", "taskmaster-db.sqlite3")
+func OpenDB(dbFilePath string) (*sqlx.DB, errorsx.Error) {
 
 	db, err := sqlx.Open("sqlite", dbFilePath)
 	if err != nil {
-		return nil, errorsx.Wrap(err)
+		return nil, errorsx.Wrap(err, "dbFilePath", dbFilePath)
 	}
 
 	_, err = db.Exec("PRAGMA foreign_keys=true")
 	if err != nil {
-		return nil, errorsx.Wrap(err)
+		return nil, errorsx.Wrap(err, "dbFilePath", dbFilePath)
 	}
 
 	return db, nil
