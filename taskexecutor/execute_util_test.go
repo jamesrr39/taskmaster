@@ -31,7 +31,7 @@ func Test_writeToLogFile(t *testing.T) {
 	err = writeToLogFile(reader, writer, SourceTaskmasterStdout, mockNowProvider)
 	require.NoError(t, err)
 
-	assert.Equal(t, "03:04:05.006: STDOUT: task finished successfully\n", string(writer.Bytes()))
+	assert.Equal(t, "03:04:05.006: STDOUT: task finished successfully\n", writer.String())
 }
 
 func mockNowProvider() time.Time {

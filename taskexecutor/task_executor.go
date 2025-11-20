@@ -12,7 +12,7 @@ import (
 )
 
 func ExecuteJobRun(task *taskrunner.Task, taskRun *taskrunner.TaskRun, taskRunStatusChangeChan chan *taskrunner.TaskRun, logFile io.Writer, workspaceDir string, providesNow NowProvider) error {
-	slog.Info("running job", "workspaceDir", workspaceDir, "taskRun", taskRun)
+	slog.Info("running job", "workspaceDir", workspaceDir, "taskName", taskRun.TaskName, "runNumber", taskRun.RunNumber)
 
 	scriptFilePath := filepath.Join(workspaceDir, "script")
 	err := os.WriteFile(scriptFilePath, []byte(task.Script), 0500)
@@ -21,20 +21,26 @@ func ExecuteJobRun(task *taskrunner.Task, taskRun *taskrunner.TaskRun, taskRunSt
 	}
 
 	cmd := exec.Command(scriptFilePath)
+
 	stdoutPipe, err := cmd.StdoutPipe()
 	if nil != err {
 		return handleTaskrunnerError("Couldn't obtain stdoutpipe. Error: "+err.Error(), logFile, taskRunStatusChangeChan, taskRun, providesNow)
 	}
+	defer stdoutPipe.Close()
 
 	stderrPipe, err := cmd.StderrPipe()
 	if nil != err {
 		return handleTaskrunnerError("Couldn't obtain stderrpipe. Error: "+err.Error(), logFile, taskRunStatusChangeChan, taskRun, providesNow)
 	}
+	defer stderrPipe.Close()
 
 	cmd.Stdin = os.Stdin
 
-	go writeToLogFile(stdoutPipe, logFile, SourceTaskmasterStdout, providesNow)
-	go writeToLogFile(stderrPipe, logFile, SourceTaskmasterStderr, providesNow)
+	stdoutMultiWriter := io.MultiWriter(logFile, os.Stdout)
+	stderrMultiWriter := io.MultiWriter(logFile, os.Stderr)
+
+	go writeToLogFile(stdoutPipe, stdoutMultiWriter, SourceTaskmasterStdout, providesNow)
+	go writeToLogFile(stderrPipe, stderrMultiWriter, SourceTaskmasterStderr, providesNow)
 
 	err = cmd.Start()
 	if nil != err {

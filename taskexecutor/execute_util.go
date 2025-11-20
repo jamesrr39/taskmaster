@@ -35,12 +35,6 @@ func writeToLogFile(pipe io.Reader, writer io.Writer, sourceName SourceID, nowPr
 	pipeScanner := bufio.NewScanner(pipe)
 	for pipeScanner.Scan() {
 		err := writeStringToLogFile(pipeScanner.Text(), writer, sourceName, nowProvider)
-		// entry := LogEntry{
-		// 	Timestamp: Timestamp(now),
-		// 	Text:      pipeScanner.Text(),
-		// 	Source:    sourceName,
-		// }
-		// err := json.NewEncoder(writer).Encode(entry)
 		if nil != err {
 			return err
 		}
