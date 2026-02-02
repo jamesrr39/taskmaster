@@ -51,14 +51,11 @@ func ExecuteJobRun(task *taskrunner.Task, taskRun *taskrunner.TaskRun, taskRunSt
 	if nil != err {
 		switch exitErr := err.(type) {
 		case *exec.ExitError:
-			taskRun.State = taskrunner.JOB_RUN_STATE_FAILED
 			exitCode := exitErr.ExitCode()
 			taskRun.ExitCode = &exitCode
 		default:
-			taskRun.State = taskrunner.JOB_RUN_STATE_UNKNOWN
 		}
 	} else {
-		taskRun.State = taskrunner.JOB_RUN_STATE_SUCCESS
 		exitCode := 0
 		taskRun.ExitCode = &exitCode
 	}
@@ -75,7 +72,6 @@ func ExecuteJobRun(task *taskrunner.Task, taskRun *taskrunner.TaskRun, taskRunSt
 func handleTaskrunnerError(errorMessage string, logFile io.Writer, jobRunStateChan chan *taskrunner.TaskRun, jobRun *taskrunner.TaskRun, providesNow NowProvider) errorsx.Error {
 	now := taskrunner.Timestamp(providesNow())
 	jobRun.EndTimestamp = &now
-	jobRun.State = taskrunner.JOB_RUN_STATE_FAILED
 	if jobRunStateChan != nil {
 		jobRunStateChan <- jobRun
 	}

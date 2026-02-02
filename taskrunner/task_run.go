@@ -5,11 +5,11 @@ import "fmt"
 type JobRunState int
 
 const (
-	JOB_RUN_STATE_UNKNOWN      JobRunState = 0
-	JOB_RUN_STATE_FAILED       JobRunState = 1
-	JOB_RUN_STATE_SUCCESS      JobRunState = 2
-	JOB_RUN_STATE_IN_PROGRESS  JobRunState = 3
-	JOB_RUN_STATE_NOT_STARTED  JobRunState = 4
+	JOB_RUN_STATE_UNKNOWN     JobRunState = 0
+	JOB_RUN_STATE_FAILED      JobRunState = 1
+	JOB_RUN_STATE_SUCCESS     JobRunState = 2
+	JOB_RUN_STATE_IN_PROGRESS JobRunState = 3
+	// JOB_RUN_STATE_NOT_STARTED  JobRunState = 4
 	JOB_RUN_STATE_FAILED_SETUP JobRunState = 5 // failed before user script could be run (e.g. couldn't write script to disk to execute it)
 )
 
@@ -49,25 +49,40 @@ func (e JobRunState) IsFinished() bool {
 }
 
 type TaskRun struct {
-	TaskName       string      `json:"taskName" db:"task_name"`
-	RunNumber      uint64      `json:"runNumber" db:"task_run_number"`
-	State          JobRunState `json:"status"`
-	StartTimestamp Timestamp   `json:"startTimestamp" db:"start_time"`
-	EndTimestamp   *Timestamp  `json:"endTimestamp,omitempty" db:"end_time"`
-	Pid            *int        `json:"pid"`                     // nil for not started
-	ExitCode       *int        `json:"exitCode" db:"exit_code"` // nil for not started
+	TaskName       string     `json:"taskName" db:"task_name"`
+	RunNumber      uint64     `json:"runNumber" db:"task_run_number"`
+	StartTimestamp Timestamp  `json:"startTimestamp" db:"start_time"`
+	EndTimestamp   *Timestamp `json:"endTimestamp,omitempty" db:"end_time"`
+	Pid            *int       `json:"pid"`                     // nil for not started
+	ExitCode       *int       `json:"exitCode" db:"exit_code"` // nil for not started
 }
 
 func (task *Task) NewTaskRun(runNumber uint64, startTimestamp Timestamp) *TaskRun {
 	return &TaskRun{
 		RunNumber:      runNumber,
-		State:          JOB_RUN_STATE_NOT_STARTED,
 		StartTimestamp: startTimestamp,
 		EndTimestamp:   nil,
 		TaskName:       task.Name,
 		Pid:            nil,
 		ExitCode:       nil,
 	}
+}
+
+func (t *TaskRun) State() JobRunState {
+	if t.EndTimestamp == nil {
+		if t.ExitCode == nil {
+			return JOB_RUN_STATE_IN_PROGRESS
+		}
+
+	}
+	// finished
+	if t.ExitCode == nil {
+		return JOB_RUN_STATE_FAILED_SETUP
+	}
+	if *t.ExitCode == 0 {
+		return JOB_RUN_STATE_SUCCESS
+	}
+	return JOB_RUN_STATE_FAILED
 }
 
 func (t *TaskRun) GoString() string {

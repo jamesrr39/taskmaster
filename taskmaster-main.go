@@ -214,7 +214,7 @@ func setupListTasks() {
 				latestRunID = fmt.Sprintf("#%d", latestEntry.RunNumber)
 
 				for _, run := range entry.LatestRuns {
-					latestRunsTexts = append(latestRunsTexts, string(run.State.AsEmoji()))
+					latestRunsTexts = append(latestRunsTexts, string(run.State().AsEmoji()))
 				}
 			}
 
@@ -229,7 +229,6 @@ func setupListTasks() {
 		tw := table.NewWriter()
 		tw.AppendHeader(table.Row{"Name", "Last run ID", "Last run finish", "Latest runs"})
 		tw.AppendRows(taskEntryRows)
-		// tw.AppendFooter(rowFooter)
 		tw.SetIndexColumn(1)
 		tw.SetTitle("Tasks")
 

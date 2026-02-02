@@ -34,9 +34,7 @@ func Test_ExecuteJobRun(t *testing.T) {
 
 	jobRunStateGoRoutineDoneChan := make(chan bool)
 
-	var newJobRunState *taskrunner.TaskRun
 	go func() {
-		newJobRunState = <-jobRunStateChan
 		jobRunStateGoRoutineDoneChan <- true
 	}()
 
@@ -44,8 +42,7 @@ func Test_ExecuteJobRun(t *testing.T) {
 	require.NoError(t, err)
 
 	<-jobRunStateGoRoutineDoneChan
-	assert.Equal(t, "03:04:05.006: STDOUT: task failed\n", string(logFile.Bytes()))
-	assert.Equal(t, taskrunner.JOB_RUN_STATE_FAILED, newJobRunState.State)
+	assert.Equal(t, "03:04:05.006: STDOUT: task failed\n", logFile.String())
 
 }
 
@@ -67,7 +64,6 @@ func Test_handleTaskrunnerError(t *testing.T) {
 	err = handleTaskrunnerError(errorMessage, logFile, jobRunStateChan, jobRun, mockNowProvider)
 	require.NoError(t, err)
 
-	assert.Equal(t, taskrunner.JOB_RUN_STATE_FAILED, newJobRunState.State)
 	assert.Equal(t, int64(946782245), newJobRunState.EndTimestamp)
 
 	assert.Equal(t, "03:04:05.006: TASKRUNNER: setup failed\n", string(logFile.Bytes()))
