@@ -27,7 +27,7 @@ release:
 
 .PHONY: release_snapshot
 release_snapshot:
-	goreleaser build --snapshot --clean
+	goreleaser build --snapshot --clean --single-target
 
 .PHONY: check_modernc_libc_version
 check_modernc_libc_version:
