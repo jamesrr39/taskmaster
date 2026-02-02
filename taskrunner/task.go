@@ -2,6 +2,7 @@ package taskrunner
 
 import (
 	"errors"
+	"fmt"
 )
 
 type Script string
@@ -18,4 +19,8 @@ func NewTask(name string, description string, script Script) (*Task, error) {
 	}
 
 	return &Task{Name: name, Description: description, Script: script}, nil
+}
+
+func (t *Task) GoString() string {
+	return fmt.Sprintf("%#v", *t)
 }

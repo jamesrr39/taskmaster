@@ -1,5 +1,7 @@
 package taskrunner
 
+import "fmt"
+
 type JobRunState int
 
 const (
@@ -18,6 +20,19 @@ var jobRunStates = [...]string{
 	"In Progress",
 	"Not Started",
 	"Setup Failed",
+}
+
+var jobRunEmojis = [...]rune{
+	'?',
+	'✗',
+	'✔',
+	'⏲',
+	'⏲',
+	'✗',
+}
+
+func (e JobRunState) AsEmoji() rune {
+	return jobRunEmojis[e]
 }
 
 func (e JobRunState) String() string {
@@ -53,4 +68,8 @@ func (task *Task) NewTaskRun(runNumber uint64, startTimestamp Timestamp) *TaskRu
 		Pid:            nil,
 		ExitCode:       nil,
 	}
+}
+
+func (t *TaskRun) GoString() string {
+	return fmt.Sprintf("%#v", *t)
 }

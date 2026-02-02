@@ -46,6 +46,7 @@ func (d *TaskDAL) GetAll() ([]*taskrunner.Task, errorsx.Error) {
 		}
 		tasks = append(tasks, task)
 	}
+
 	return tasks, nil
 }
 
@@ -114,6 +115,31 @@ func (d *TaskDAL) GetTaskRun(dbConn db.DBConn, taskName string, taskRunNumber ui
 		WHERE tr.task_name = $1 AND tr.task_run_number = $2;
 		`,
 		taskName, taskRunNumber,
+	)
+	if err != nil {
+		return nil, errorsx.Wrap(err)
+	}
+
+	return taskRun, nil
+}
+
+// GetTaskLatestRuns gets the latest task runs, with most recent runs latest
+func (d *TaskDAL) GetTaskLatestRuns(dbConn db.DBConn, taskName string, limit uint) ([]*taskrunner.TaskRun, errorsx.Error) {
+	taskRun := []*taskrunner.TaskRun{}
+
+	err := dbConn.Select(
+		&taskRun,
+		`
+		SELECT tr.task_name, tr.task_run_number, start_time, end_time, exit_code
+		FROM task_runs tr
+		LEFT JOIN task_runs_results trr
+		ON tr.task_name = trr.task_name
+		AND tr.task_run_number = trr.task_run_number
+		WHERE tr.task_name = $1
+		ORDER BY tr.task_run_number DESC 
+		LIMIT $2;
+		`,
+		taskName, limit,
 	)
 	if err != nil {
 		return nil, errorsx.Wrap(err)
