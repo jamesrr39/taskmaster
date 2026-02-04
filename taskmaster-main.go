@@ -139,34 +139,46 @@ func (e ListTaskEntry) LatestEntry() *taskrunner.TaskRun {
 	return e.LatestRuns[0]
 }
 
+type SorterFields struct {
+	TaskName string
+	TaskRun  *taskrunner.TaskRun
+}
+
+func sorter(a, b SorterFields) bool {
+	if a.TaskRun == nil && b.TaskRun == nil {
+		return strings.ToLower(a.TaskName) < strings.ToLower(b.TaskName)
+	}
+
+	if a.TaskRun == nil {
+		return false
+	}
+
+	if b.TaskRun == nil {
+		return true
+	}
+
+	if a.TaskRun.StartTimestamp != b.TaskRun.StartTimestamp {
+		return time.Time(a.TaskRun.StartTimestamp).UnixNano() > time.Time(b.TaskRun.StartTimestamp).UnixNano()
+	}
+
+	return strings.ToLower(a.TaskName) < strings.ToLower(b.TaskName)
+}
+
 func sortEntries(entries []ListTaskEntry) []ListTaskEntry {
 	sort.Slice(entries, func(i, j int) bool {
 		iLatestEntry := entries[i].LatestEntry()
 		jLatestEntry := entries[j].LatestEntry()
-		if iLatestEntry == nil && jLatestEntry == nil {
-			return strings.ToLower(entries[i].Task.Name) < strings.ToLower(entries[j].Task.Name)
-		}
-
-		if iLatestEntry == nil {
-			return false
-		}
-
-		if jLatestEntry == nil {
-			return true
-		}
-
-		if iLatestEntry.StartTimestamp != jLatestEntry.StartTimestamp {
-			return time.Time(iLatestEntry.StartTimestamp).UnixNano() > time.Time(jLatestEntry.StartTimestamp).UnixNano()
-		}
-
-		return strings.ToLower(entries[i].Task.Name) < strings.ToLower(entries[j].Task.Name)
+		return sorter(
+			SorterFields{TaskName: entries[i].Task.Name, TaskRun: iLatestEntry},
+			SorterFields{TaskName: entries[j].Task.Name, TaskRun: jLatestEntry},
+		)
 	})
 	return entries
 }
 
 func setupListTasks() {
 	cmd := app.Command("list-tasks", "").Alias("ls")
-	latestRunsLimit := cmd.Flag("latest-runs-limit", "max number of latest runs to show in the summary").Default("5").Uint()
+	latestRunsLimit := cmd.Flag("limit", "max number of latest runs to show in the summary").Default("5").Uint()
 	filePath := addFilePathFlag(cmd)
 
 	cmd.Action(func(pc *kingpin.ParseContext) error {
@@ -187,7 +199,7 @@ func setupListTasks() {
 
 		entries := []ListTaskEntry{}
 		for _, task := range tasks {
-			latestRuns, err := taskDAL.GetTaskLatestRuns(dbConn, task.Name, *latestRunsLimit)
+			latestRuns, err := taskDAL.GetTaskLatestRunsForTask(dbConn, task.Name, *latestRunsLimit)
 			if err != nil {
 				return errorsx.ErrWithStack(errorsx.Wrap(err, "taskName", task.Name))
 			}
@@ -270,10 +282,11 @@ func setupRunTask() {
 }
 
 func setupGetTaskRunResult() {
-	cmd := app.Command("get-task-run-result", "")
+	cmd := app.Command("results", "")
 	filePath := addFilePathFlag(cmd)
-	taskName := cmd.Arg("taskName", "").Required().String()
-	runNumber := cmd.Arg("runNumber", "").Required().Uint64()
+	taskName := cmd.Flag("task-name", "").String()
+	runNumber := cmd.Flag("run-number", "").Uint64()
+	limit := cmd.Flag("limit", "max number of latest runs to show in the summary").Default("20").Uint()
 
 	cmd.Action(func(pc *kingpin.ParseContext) error {
 		var err error
@@ -286,12 +299,46 @@ func setupGetTaskRunResult() {
 		}
 
 		taskDAL := dal.NewTaskDAL(*filePath, provideNow)
-		taskRun, err := taskDAL.GetTaskRun(dbConn, *taskName, *runNumber)
+
+		taskRuns, err := taskDAL.GetTaskRuns(dbConn, *taskName, *runNumber, *limit)
 		if err != nil {
 			return errorsx.ErrWithStack(errorsx.Wrap(err))
 		}
 
-		MustJSONPrettyPrint(os.Stdout, taskRun)
+		sort.Slice(taskRuns, func(i, j int) bool {
+			a := taskRuns[i]
+			b := taskRuns[j]
+			return sorter(
+				SorterFields{TaskName: a.TaskName, TaskRun: a},
+				SorterFields{TaskName: b.TaskName, TaskRun: b},
+			)
+		})
+
+		var taskEntryRows []table.Row
+		for _, taskRun := range taskRuns {
+			state := taskRun.State()
+			finishedText := "still running..."
+			duration := time.Since(time.Time(taskRun.StartTimestamp))
+			if state.IsFinished() {
+				finishedText = time.Time(*taskRun.EndTimestamp).Format(time.RFC1123)
+				duration = time.Time(*taskRun.EndTimestamp).Sub(time.Time(taskRun.StartTimestamp))
+			}
+
+			taskEntryRows = append(
+				taskEntryRows,
+				table.Row{
+					taskRun.TaskName, fmt.Sprintf("#%d", taskRun.RunNumber), finishedText, duration, string(state.AsEmoji()),
+				},
+			)
+		}
+
+		tw := table.NewWriter()
+		tw.AppendHeader(table.Row{"Name", "Last run ID", "Finished", "Duration", "state"})
+		tw.AppendRows(taskEntryRows)
+		tw.SetIndexColumn(1)
+		tw.SetTitle("Tasks")
+
+		fmt.Println(tw.Render())
 
 		return nil
 	})

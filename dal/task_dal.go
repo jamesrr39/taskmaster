@@ -101,30 +101,50 @@ func (d *TaskDAL) insertTaskRunResults(dbConn db.DBConn, taskRun *taskrunner.Tas
 	return nil
 }
 
-func (d *TaskDAL) GetTaskRun(dbConn db.DBConn, taskName string, taskRunNumber uint64) (*taskrunner.TaskRun, errorsx.Error) {
-	taskRun := new(taskrunner.TaskRun)
+// GetTaskRuns gets the runs associated with these searched for tasks.
+// Filters: taskName and taskRunNumber are optional filters, taskName == "" or taskRunNumber == 0 do not apply those filters
+func (d *TaskDAL) GetTaskRuns(dbConn db.DBConn, taskName string, taskRunNumber uint64, limit uint) ([]*taskrunner.TaskRun, errorsx.Error) {
+	taskRuns := []*taskrunner.TaskRun{}
 
-	err := dbConn.Get(
-		taskRun,
-		`
+	filterLines := []string{"TRUE"} // initial "true" makes it easier to build the query string, we don't have to dynamically add WHERE
+	args := []any{limit}
+	if taskName != "" {
+		filterLines = append(filterLines, fmt.Sprintf("tr.task_name = $%d", len(args)+1))
+		args = append(args, taskName)
+	}
+	if taskRunNumber != 0 {
+		filterLines = append(filterLines, fmt.Sprintf("tr.task_run_number = $%d", len(args)+1))
+		args = append(args, taskRunNumber)
+	}
+
+	slog.Info("filter", "filter lines", filterLines, "taskName", taskName)
+
+	query := fmt.Sprintf(`
 		SELECT tr.task_name, tr.task_run_number, start_time, end_time, exit_code
 		FROM task_runs tr
 		LEFT JOIN task_runs_results trr
 		ON tr.task_name = trr.task_name
 		AND tr.task_run_number = trr.task_run_number
-		WHERE tr.task_name = $1 AND tr.task_run_number = $2;
-		`,
-		taskName, taskRunNumber,
+		WHERE %s
+		ORDER BY tr.start_time DESC, tr.task_name
+		LIMIT $1;
+		`, strings.Join(filterLines, " AND "),
+	)
+
+	err := dbConn.Select(
+		&taskRuns,
+		query,
+		args...,
 	)
 	if err != nil {
-		return nil, errorsx.Wrap(err)
+		return nil, errorsx.Wrap(err, "query", query)
 	}
 
-	return taskRun, nil
+	return taskRuns, nil
 }
 
-// GetTaskLatestRuns gets the latest task runs, with most recent runs latest
-func (d *TaskDAL) GetTaskLatestRuns(dbConn db.DBConn, taskName string, limit uint) ([]*taskrunner.TaskRun, errorsx.Error) {
+// GetTaskLatestRunsForTask gets the latest task runs, with most recent runs latest
+func (d *TaskDAL) GetTaskLatestRunsForTask(dbConn db.DBConn, taskName string, limit uint) ([]*taskrunner.TaskRun, errorsx.Error) {
 	taskRun := []*taskrunner.TaskRun{}
 
 	err := dbConn.Select(
@@ -140,6 +160,30 @@ func (d *TaskDAL) GetTaskLatestRuns(dbConn db.DBConn, taskName string, limit uin
 		LIMIT $2;
 		`,
 		taskName, limit,
+	)
+	if err != nil {
+		return nil, errorsx.Wrap(err)
+	}
+
+	return taskRun, nil
+}
+
+// GetTaskLatestRuns gets the latest task runs, with most recent runs latest
+func (d *TaskDAL) GetTaskLatestRuns(dbConn db.DBConn, limit uint) ([]*taskrunner.TaskRun, errorsx.Error) {
+	taskRun := []*taskrunner.TaskRun{}
+
+	err := dbConn.Select(
+		&taskRun,
+		`
+		SELECT tr.task_name, tr.task_run_number, start_time, end_time, exit_code
+		FROM task_runs tr
+		LEFT JOIN task_runs_results trr
+		ON tr.task_name = trr.task_name
+		AND tr.task_run_number = trr.task_run_number
+		ORDER BY tr.end_time, tr.start_time DESC, tr.task_name ASC
+		LIMIT $2;
+		`,
+		limit,
 	)
 	if err != nil {
 		return nil, errorsx.Wrap(err)
