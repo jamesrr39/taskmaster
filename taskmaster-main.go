@@ -241,6 +241,7 @@ func setupListTasks() {
 		tw := table.NewWriter()
 		tw.AppendHeader(table.Row{"Name", "Last run ID", "Last run finish", "Latest runs"})
 		tw.AppendRows(taskEntryRows)
+		tw.AppendFooter(table.Row{fmt.Sprintf("Limited to %d rows", *latestRunsLimit)})
 		tw.SetIndexColumn(1)
 		tw.SetTitle("Tasks")
 
@@ -286,7 +287,7 @@ func setupGetTaskRunResult() {
 	filePath := addFilePathFlag(cmd)
 	taskName := cmd.Flag("task-name", "").String()
 	runNumber := cmd.Flag("run-number", "").Uint64()
-	limit := cmd.Flag("limit", "max number of latest runs to show in the summary").Default("20").Uint()
+	limit := cmd.Flag("limit", "max number of latest runs to show in the summary").Default("30").Uint()
 
 	cmd.Action(func(pc *kingpin.ParseContext) error {
 		var err error
@@ -335,6 +336,7 @@ func setupGetTaskRunResult() {
 		tw := table.NewWriter()
 		tw.AppendHeader(table.Row{"Name", "Last run ID", "Finished", "Duration", "state"})
 		tw.AppendRows(taskEntryRows)
+		tw.AppendFooter(table.Row{fmt.Sprintf("Limited to %d rows", *limit)})
 		tw.SetIndexColumn(1)
 		tw.SetTitle("Tasks")
 
