@@ -29,6 +29,10 @@ release:
 release_snapshot:
 	goreleaser build --snapshot --clean --single-target
 
+.PHONY: install
+install: release_snapshot
+	sudo mv dist/taskmaster*/taskmaster /usr/local/bin/taskmaster
+
 .PHONY: check_modernc_libc_version
 check_modernc_libc_version:
 # https://pkg.go.dev/modernc.org/sqlite#section-readme
