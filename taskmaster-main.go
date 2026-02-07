@@ -184,9 +184,7 @@ func setupListTasks() {
 	cmd.Action(func(pc *kingpin.ParseContext) error {
 		var err error
 
-		dbFilePath := filepath.Join(*filePath, dal.DataFolderName, "taskmaster-db.sqlite3")
-
-		dbConn, err := db.OpenDB(dbFilePath)
+		dbConn, err := getDBConn(*filePath)
 		if err != nil {
 			return errorsx.ErrWithStack(errorsx.Wrap(err))
 		}
@@ -258,9 +256,7 @@ func setupRunTask() {
 	cmd.Action(func(pc *kingpin.ParseContext) error {
 		var err error
 
-		dbFilePath := filepath.Join(*filePath, dal.DataFolderName, "taskmaster-db.sqlite3")
-
-		dbConn, err := db.OpenDB(dbFilePath)
+		dbConn, err := getDBConn(*filePath)
 		if err != nil {
 			return errorsx.ErrWithStack(errorsx.Wrap(err))
 		}
@@ -292,9 +288,7 @@ func setupGetTaskRunResult() {
 	cmd.Action(func(pc *kingpin.ParseContext) error {
 		var err error
 
-		dbFilePath := filepath.Join(*filePath, dal.DataFolderName, "taskmaster-db.sqlite3")
-
-		dbConn, err := db.OpenDB(dbFilePath)
+		dbConn, err := getDBConn(*filePath)
 		if err != nil {
 			return errorsx.ErrWithStack(errorsx.Wrap(err))
 		}
@@ -350,12 +344,33 @@ func setupGetTaskRunLogs() {
 	cmd := app.Command("logs", "")
 	filePath := addFilePathFlag(cmd)
 	taskName := cmd.Arg("taskName", "").Required().String()
-	runNumber := cmd.Arg("runNumber", "").Required().Uint64()
+	runNumber := cmd.Flag("run-number", "").Uint64()
 
 	cmd.Action(func(pc *kingpin.ParseContext) error {
 		var err error
 
+		dbConn, err := getDBConn(*filePath)
+		if err != nil {
+			return errorsx.ErrWithStack(errorsx.Wrap(err))
+		}
+
 		taskDAL := dal.NewTaskDAL(*filePath, provideNow)
+
+		if *runNumber == 0 {
+			taskRuns, err := taskDAL.GetTaskLatestRunsForTask(dbConn, *taskName, 1)
+			if err != nil {
+				return errorsx.ErrWithStack(errorsx.Wrap(err))
+			}
+			switch len(taskRuns) {
+			case 0:
+				return fmt.Errorf("no task runs for '%s'", *taskName)
+			case 1:
+				runNumber = &taskRuns[0].RunNumber
+			default:
+				return errorsx.ErrWithStack(errorsx.Errorf("expected 1 result for getting task runs, got %d", len(taskRuns)))
+			}
+		}
+
 		logFile, err := taskDAL.GetLogsTask(*taskName, *runNumber)
 		if err != nil {
 			return errorsx.ErrWithStack(errorsx.Wrap(err))
@@ -444,4 +459,15 @@ func makeHttpLink(s string) string {
 	}
 
 	return "http://" + s
+}
+
+func getDBConn(filePath string) (db.DBConn, errorsx.Error) {
+	dbFilePath := filepath.Join(filePath, dal.DataFolderName, "taskmaster-db.sqlite3")
+
+	dbConn, err := db.OpenDB(dbFilePath)
+	if err != nil {
+		return nil, errorsx.Wrap(err)
+	}
+
+	return dbConn, nil
 }
