@@ -272,7 +272,14 @@ func setupRunTask() {
 			return errorsx.ErrWithStack(errorsx.Wrap(err))
 		}
 
-		MustJSONPrettyPrint(os.Stdout, taskRun)
+		switch taskRun.State() {
+		case taskrunner.JOB_RUN_STATE_SUCCESS:
+			fmt.Printf("%s Task %q finished successfully in %s\n", string(taskRun.State().AsEmoji()), *taskName, getTaskDuration(taskRun))
+		case taskrunner.JOB_RUN_STATE_FAILED:
+			return fmt.Errorf("%s Task %q failed after %s", string(taskRun.State().AsEmoji()), *taskName, getTaskDuration(taskRun))
+		default:
+			return errorsx.ErrWithStack(errorsx.Errorf("Task %q finished, but received unknown state: %q", *taskName, taskRun.State()))
+		}
 
 		return nil
 	})
@@ -316,7 +323,7 @@ func setupGetTaskRunResult() {
 			duration := time.Since(time.Time(taskRun.StartTimestamp))
 			if state.IsFinished() {
 				finishedText = time.Time(*taskRun.EndTimestamp).Format(time.RFC1123)
-				duration = time.Time(*taskRun.EndTimestamp).Sub(time.Time(taskRun.StartTimestamp))
+				duration = getTaskDuration(taskRun)
 			}
 
 			taskEntryRows = append(
@@ -470,4 +477,8 @@ func getDBConn(filePath string) (db.DBConn, errorsx.Error) {
 	}
 
 	return dbConn, nil
+}
+
+func getTaskDuration(taskRun *taskrunner.TaskRun) time.Duration {
+	return time.Time(*taskRun.EndTimestamp).Sub(time.Time(taskRun.StartTimestamp))
 }
