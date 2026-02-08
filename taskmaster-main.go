@@ -38,6 +38,7 @@ func main() {
 	setupUpgradeVersion()
 	setupGetTaskRunResult()
 	setupGetTaskRunLogs()
+	setupVersion()
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
@@ -48,6 +49,16 @@ const (
 	SpecFormatJSON       = "json"
 	SpecFormatJSONPretty = "jsonpretty"
 )
+
+var version = "dev"
+
+func setupVersion() {
+	cmd := app.Command("version", "")
+	cmd.Action(func(pc *kingpin.ParseContext) error {
+		fmt.Println(version)
+		return nil
+	})
+}
 
 func setupInit() {
 	cmd := app.Command("init", "")
