@@ -21,6 +21,7 @@ run_dev_server:
 run_dev_client:
 	cd web-client && yarn dev
 
+# https://github.com/settings/tokens/new
 .PHONY: release
 release:
 	goreleaser release --clean
