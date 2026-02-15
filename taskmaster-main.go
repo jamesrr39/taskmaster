@@ -404,14 +404,6 @@ func setupGetTaskRunLogs() {
 	})
 }
 
-func addFilePathFlag(cmd *kingpin.CmdClause) *string {
-	return cmd.Flag("path", "Path to Taskmaster directory").Short('C').Default(".").String()
-}
-
-func provideNow() time.Time {
-	return time.Now()
-}
-
 func setupUpgradeVersion() {
 	cmd := app.Command("upgrade", "")
 	filePath := addFilePathFlag(cmd)
@@ -492,4 +484,12 @@ func getDBConn(filePath string) (db.DBConn, errorsx.Error) {
 
 func getTaskDuration(taskRun *taskrunner.TaskRun) time.Duration {
 	return time.Time(*taskRun.EndTimestamp).Sub(time.Time(taskRun.StartTimestamp))
+}
+
+func addFilePathFlag(cmd *kingpin.CmdClause) *string {
+	return cmd.Flag("path", "Path to Taskmaster directory").Short('C').Default(".").String()
+}
+
+func provideNow() time.Time {
+	return time.Now()
 }
