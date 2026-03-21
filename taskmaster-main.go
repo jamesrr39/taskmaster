@@ -250,7 +250,7 @@ func setupListTasks() {
 		tw := table.NewWriter()
 		tw.AppendHeader(table.Row{"Name", "Last run ID", "Last run finish", "Latest runs"})
 		tw.AppendRows(taskEntryRows)
-		tw.AppendFooter(table.Row{fmt.Sprintf("Limited to %d rows", *latestRunsLimit)})
+		tw.AppendFooter(table.Row{fmt.Sprintf("Results limited to %d results", *latestRunsLimit)})
 		tw.SetIndexColumn(1)
 		tw.SetTitle("Tasks")
 
