@@ -24,7 +24,6 @@ func writeStringToLogFile(text string, writer io.Writer, sourceName SourceID, no
 		Source:    sourceName,
 	}
 	err := json.NewEncoder(writer).Encode(entry)
-	// _, err := writer.Write([]byte(getFormattedTime(nowProvider()) + ": " + sourceName + ": " + text + "\n"))
 	if nil != err {
 		return err
 	}

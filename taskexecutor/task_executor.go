@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
 
 	"github.com/jamesrr39/go-errorsx"
 	"github.com/jamesrr39/taskmaster/taskrunner"
@@ -65,6 +66,10 @@ func ExecuteJobRun(task *taskrunner.Task, taskRun *taskrunner.TaskRun, taskRunSt
 	if taskRunStatusChangeChan != nil {
 		taskRunStatusChangeChan <- taskRun
 	}
+
+	// wait for writers to finish
+	// TODO something better than this
+	time.Sleep(time.Second)
 
 	return nil
 }
