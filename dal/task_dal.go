@@ -18,7 +18,9 @@ import (
 )
 
 const (
-	DataFolderName = "taskmaster-data"
+	DataFolderName  = "taskmaster-data"
+	LogFileName     = "logs.jsonl"
+	LogFileNameZstd = LogFileName + ".zst"
 )
 
 type TaskDAL struct {
@@ -193,16 +195,27 @@ func (d *TaskDAL) GetTaskLatestRuns(dbConn db.DBConn, limit uint) ([]*taskrunner
 }
 
 func (d *TaskDAL) GetLogsTask(taskName string, runNumber uint64) (io.ReadCloser, errorsx.Error) {
-	filePath := filepath.Join(d.basePath, DataFolderName, "results", taskName, "runs", fmt.Sprintf("%d", runNumber), "logs.jsonl.zst")
+	logsDir := filepath.Join(d.basePath, DataFolderName, "results", taskName, "runs", fmt.Sprintf("%d", runNumber))
+	// first try zstd logs
+	zstdFilePath := filepath.Join(logsDir, LogFileNameZstd)
 
-	f, err := os.Open(filePath)
+	f, err := os.Open(zstdFilePath)
 	if err != nil {
-		return nil, errorsx.Wrap(err, "filePath", filePath)
+		if os.IsNotExist(err) {
+			// try regular text file if no zstd log file
+			regularLogsFilePath := filepath.Join(logsDir, LogFileName)
+			fReg, err := os.Open(regularLogsFilePath)
+			if err != nil {
+				return nil, errorsx.Wrap(err, "filePath", zstdFilePath)
+			}
+			return fReg, nil
+		}
+		return nil, errorsx.Wrap(err, "filePath", zstdFilePath)
 	}
 
 	decoder, err := zstd.NewReader(f)
 	if err != nil {
-		return nil, errorsx.Wrap(err, "filePath", filePath)
+		return nil, errorsx.Wrap(err, "filePath", zstdFilePath)
 	}
 
 	return zstdReadCloser{f, decoder}, nil
@@ -241,7 +254,7 @@ func (d *TaskDAL) RunTask(dbConn db.DBConn, task *taskrunner.Task) (*taskrunner.
 		return nil, errorsx.Wrap(err, "taskRun", taskRun, "taskRunDir", taskRunDir)
 	}
 
-	logFilePath := filepath.Join(taskRunDir, "logs.jsonl.zst")
+	logFilePath := filepath.Join(taskRunDir, LogFileName)
 
 	logFile, err := os.Create(logFilePath)
 	if err != nil {
@@ -249,23 +262,12 @@ func (d *TaskDAL) RunTask(dbConn db.DBConn, task *taskrunner.Task) (*taskrunner.
 	}
 	defer logFile.Close()
 
-	zstdWriter, err := zstd.NewWriter(logFile)
+	err = taskexecutor.ExecuteJobRun(task, taskRun, nil, logFile, taskRunTempDir, d.nowProvider)
 	if err != nil {
 		return nil, errorsx.Wrap(err, "taskRun", taskRun)
 	}
-	defer func() {
-		err := zstdWriter.Flush()
-		if err != nil {
-			slog.Error("couldn't flush zstd writer", "taskRun", taskRun, "error", err)
-		}
 
-		err = zstdWriter.Close()
-		if err != nil {
-			slog.Error("couldn't close zstd writer", "taskRun", taskRun, "error", err)
-		}
-	}()
-
-	err = taskexecutor.ExecuteJobRun(task, taskRun, nil, zstdWriter, taskRunTempDir, d.nowProvider)
+	err = logFile.Sync()
 	if err != nil {
 		return nil, errorsx.Wrap(err, "taskRun", taskRun)
 	}
@@ -275,7 +277,50 @@ func (d *TaskDAL) RunTask(dbConn db.DBConn, task *taskrunner.Task) (*taskrunner.
 		return nil, errorsx.Wrap(err, "taskRun", taskRun)
 	}
 
+	_, err = logFile.Seek(0, io.SeekStart)
+	if err != nil {
+		return nil, errorsx.Wrap(err, "taskRun", taskRun)
+	}
+
+	// copy log file to zstd file
+	err = copyLogFileToZstd(logFile, filepath.Join(taskRunDir, LogFileNameZstd))
+	if err != nil {
+		return nil, errorsx.Wrap(err, "taskRun", taskRun)
+	}
+
+	// remove text log file path, now we have zstd one
+	err = os.Remove(logFilePath)
+	if err != nil {
+		return nil, errorsx.Wrap(err, "taskRun", taskRun, "logFilePath", logFilePath)
+	}
+
 	return taskRun, nil
+}
+
+func copyLogFileToZstd(file *os.File, zstdFilePath string) errorsx.Error {
+	zstdFile, err := os.Create(zstdFilePath)
+	if err != nil {
+		return errorsx.Wrap(err, "zstdFilePath", zstdFilePath)
+	}
+	defer zstdFile.Close()
+
+	zstdWriter, err := zstd.NewWriter(zstdFile)
+	if err != nil {
+		return errorsx.Wrap(err, "zstdFilePath", zstdFilePath)
+	}
+	defer zstdWriter.Close()
+
+	_, err = io.Copy(zstdWriter, file)
+	if err != nil {
+		return errorsx.Wrap(err, "zstdFilePath", zstdFilePath)
+	}
+
+	err = zstdWriter.Flush()
+	if err != nil {
+		return errorsx.Wrap(err, "zstdFilePath", zstdFilePath)
+	}
+
+	return nil
 }
 
 func readTaskFile(taskFilePath string) (*taskrunner.Task, errorsx.Error) {
