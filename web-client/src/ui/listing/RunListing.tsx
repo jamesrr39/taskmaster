@@ -23,8 +23,8 @@ function RunListing() {
             <table className={"table table-striped"}>
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Description</th>
+                        <th>Run #</th>
+                        <th>Task Name</th>
                         <th>Result</th>
                         <th>Start</th>
                         <th>Duration</th>
@@ -34,10 +34,10 @@ function RunListing() {
                 {data.runs.map((run, idx) => {
                     return (
                         <tr key={idx}>
-                            <td>{run.runNumber}</td>
+                            <td>#{run.runNumber}</td>
                             <td>{run.taskName}</td>
                             <td>{run.exitCode === 0 ? 'success' : 'failed'}</td>
-                            <td>{run.startTimestamp}</td>
+                            <td>{run.startTimestamp ? new Date(run.startTimestamp).toLocaleString() : 'unknown'}</td>
                             <td>{run.endTimestamp && run.startTimestamp ? `${((run.endTimestamp - run.startTimestamp) / 1000).toFixed(2)}s` : 'In Progress'}</td>
                         </tr>
                     )
