@@ -9,6 +9,38 @@ import type * as Fetcher from "./taskmasterFetcher";
 import { taskmasterFetch } from "./taskmasterFetcher";
 import type * as Schemas from "./taskmasterSchemas";
 
+export type GetRunsError = Fetcher.ErrorWrapper<undefined>;
+
+export type GetRunsVariables = TaskmasterContext["fetcherOptions"];
+
+export const fetchGetRuns = (
+  variables: GetRunsVariables,
+  signal?: AbortSignal,
+) =>
+  taskmasterFetch<
+    Schemas.ListRunsResponse,
+    GetRunsError,
+    undefined,
+    {},
+    {},
+    {}
+  >({ url: "/v1/runs", method: "get", ...variables, signal });
+
+export const getRunsQuery = (
+  variables: GetRunsVariables,
+): [
+  reactQuery.QueryKey,
+  ({ signal }: { signal?: AbortSignal }) => Promise<Schemas.ListRunsResponse>,
+] => [
+  queryKeyFn({
+    path: "/v1/runs",
+    operationId: "getRuns",
+    variables,
+  }),
+  async ({ signal }: { signal?: AbortSignal }) =>
+    fetchGetRuns({ ...variables }, signal),
+];
+
 export type GetTasksError = Fetcher.ErrorWrapper<undefined>;
 
 export type GetTasksVariables = TaskmasterContext["fetcherOptions"];
@@ -18,7 +50,7 @@ export const fetchGetTasks = (
   signal?: AbortSignal,
 ) =>
   taskmasterFetch<
-    Schemas.ListProjectsResponse,
+    Schemas.ListTasksResponse,
     GetTasksError,
     undefined,
     {},
@@ -30,11 +62,7 @@ export const getTasksQuery = (
   variables: GetTasksVariables,
 ): [
   reactQuery.QueryKey,
-  ({
-    signal,
-  }: {
-    signal?: AbortSignal;
-  }) => Promise<Schemas.ListProjectsResponse>,
+  ({ signal }: { signal?: AbortSignal }) => Promise<Schemas.ListTasksResponse>,
 ] => [
   queryKeyFn({
     path: "/v1/tasks",
@@ -45,8 +73,14 @@ export const getTasksQuery = (
     fetchGetTasks({ ...variables }, signal),
 ];
 
-export type QueryOperation = {
-  path: "/v1/tasks";
-  operationId: "getTasks";
-  variables: GetTasksVariables;
-};
+export type QueryOperation =
+  | {
+      path: "/v1/runs";
+      operationId: "getRuns";
+      variables: GetRunsVariables;
+    }
+  | {
+      path: "/v1/tasks";
+      operationId: "getTasks";
+      variables: GetTasksVariables;
+    };

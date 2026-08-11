@@ -4,6 +4,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jamesrr39/go-openapix"
 	"github.com/jamesrr39/taskmaster/dal"
+	"github.com/jamesrr39/taskmaster/db"
+	"github.com/jamesrr39/taskmaster/taskrunner"
 	"github.com/swaggest/openapi-go/openapi3"
 	"github.com/swaggest/rest"
 	"github.com/swaggest/rest/chirouter"
@@ -14,7 +16,7 @@ import (
 	"github.com/swaggest/rest/response"
 )
 
-func CreateApiRouter(taskDAL *dal.TaskDAL, baseDir string) (*openapi.Collector, *chirouter.Wrapper) {
+func CreateApiRouter(taskDAL *dal.TaskDAL, baseDir string, dbConn db.DBConn) (*openapi.Collector, *chirouter.Wrapper) {
 	apiSchema := &openapi.Collector{}
 	apiSchema.Reflector().SpecEns().Info.Title = "Taskmaster"
 	apiSchema.Reflector().SpecEns().Info.WithDescription("REST API definitions for Taskmaster")
@@ -27,6 +29,8 @@ func CreateApiRouter(taskDAL *dal.TaskDAL, baseDir string) (*openapi.Collector, 
 		URL:         "/api",
 		Description: &serverDesc,
 	})
+
+	apiSchema.Reflector().Reflector.AddTypeMapping(taskrunner.Timestamp{}, int64(0))
 
 	// Setup request decoder and validator.
 	validatorFactory := jsonschema.NewFactory(apiSchema, apiSchema)
@@ -44,6 +48,7 @@ func CreateApiRouter(taskDAL *dal.TaskDAL, baseDir string) (*openapi.Collector, 
 
 	apiRouter.Route("/v1", func(r chi.Router) {
 		openapix.Get(r, "/tasks", GetAllTasks(taskDAL, baseDir))
+		openapix.Get(r, "/runs", GetAllRuns(taskDAL, dbConn))
 	})
 
 	// check array types are marked as non-null; i.e. no items will return "[]" instead of "null"

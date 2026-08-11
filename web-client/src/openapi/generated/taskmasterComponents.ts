@@ -9,6 +9,45 @@ import type * as Fetcher from "./taskmasterFetcher";
 import { taskmasterFetch } from "./taskmasterFetcher";
 import type * as Schemas from "./taskmasterSchemas";
 
+export type GetRunsError = Fetcher.ErrorWrapper<undefined>;
+
+export type GetRunsVariables = TaskmasterContext["fetcherOptions"];
+
+export const fetchGetRuns = (
+  variables: GetRunsVariables,
+  signal?: AbortSignal,
+) =>
+  taskmasterFetch<
+    Schemas.ListRunsResponse,
+    GetRunsError,
+    undefined,
+    {},
+    {},
+    {}
+  >({ url: "/v1/runs", method: "get", ...variables, signal });
+
+export const useGetRuns = <TData = Schemas.ListRunsResponse,>(
+  variables: GetRunsVariables,
+  options?: Omit<
+    reactQuery.UseQueryOptions<Schemas.ListRunsResponse, GetRunsError, TData>,
+    "queryKey" | "queryFn" | "initialData"
+  >,
+) => {
+  const { fetcherOptions, queryOptions, queryKeyFn } =
+    useTaskmasterContext(options);
+  return reactQuery.useQuery<Schemas.ListRunsResponse, GetRunsError, TData>({
+    queryKey: queryKeyFn({
+      path: "/v1/runs",
+      operationId: "getRuns",
+      variables,
+    }),
+    queryFn: ({ signal }) =>
+      fetchGetRuns({ ...fetcherOptions, ...variables }, signal),
+    ...options,
+    ...queryOptions,
+  });
+};
+
 export type GetTasksError = Fetcher.ErrorWrapper<undefined>;
 
 export type GetTasksVariables = TaskmasterContext["fetcherOptions"];
@@ -18,7 +57,7 @@ export const fetchGetTasks = (
   signal?: AbortSignal,
 ) =>
   taskmasterFetch<
-    Schemas.ListProjectsResponse,
+    Schemas.ListTasksResponse,
     GetTasksError,
     undefined,
     {},
@@ -26,24 +65,16 @@ export const fetchGetTasks = (
     {}
   >({ url: "/v1/tasks", method: "get", ...variables, signal });
 
-export const useGetTasks = <TData = Schemas.ListProjectsResponse,>(
+export const useGetTasks = <TData = Schemas.ListTasksResponse,>(
   variables: GetTasksVariables,
   options?: Omit<
-    reactQuery.UseQueryOptions<
-      Schemas.ListProjectsResponse,
-      GetTasksError,
-      TData
-    >,
+    reactQuery.UseQueryOptions<Schemas.ListTasksResponse, GetTasksError, TData>,
     "queryKey" | "queryFn" | "initialData"
   >,
 ) => {
   const { fetcherOptions, queryOptions, queryKeyFn } =
     useTaskmasterContext(options);
-  return reactQuery.useQuery<
-    Schemas.ListProjectsResponse,
-    GetTasksError,
-    TData
-  >({
+  return reactQuery.useQuery<Schemas.ListTasksResponse, GetTasksError, TData>({
     queryKey: queryKeyFn({
       path: "/v1/tasks",
       operationId: "getTasks",
@@ -56,8 +87,14 @@ export const useGetTasks = <TData = Schemas.ListProjectsResponse,>(
   });
 };
 
-export type QueryOperation = {
-  path: "/v1/tasks";
-  operationId: "getTasks";
-  variables: GetTasksVariables;
-};
+export type QueryOperation =
+  | {
+      path: "/v1/runs";
+      operationId: "getRuns";
+      variables: GetRunsVariables;
+    }
+  | {
+      path: "/v1/tasks";
+      operationId: "getTasks";
+      variables: GetTasksVariables;
+    };

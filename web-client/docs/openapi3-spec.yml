@@ -7,6 +7,17 @@ servers:
 - description: API server
   url: /api
 paths:
+  /v1/runs:
+    get:
+      operationId: getRuns
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListRunsResponse'
+          description: OK
+      summary: Get runs
   /v1/tasks:
     get:
       operationId: getTasks
@@ -15,32 +26,51 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ListProjectsResponse'
+                $ref: '#/components/schemas/ListTasksResponse'
           description: OK
       summary: Get tasks
 components:
   schemas:
-    TaskrunnerLogConfig:
-      properties:
-        compression:
-          type: string
-      required:
-      - compression
-      type: object
     TaskrunnerTask:
       properties:
         description:
           type: string
-        log:
-          $ref: '#/components/schemas/TaskrunnerLogConfig'
         name:
           type: string
         script:
           type: string
-      required:
-      - log
       type: object
-    ListProjectsResponse:
+    TaskrunnerTaskRun:
+      properties:
+        endTimestamp:
+          format: int64
+          nullable: true
+          type: integer
+        exitCode:
+          nullable: true
+          type: integer
+        pid:
+          nullable: true
+          type: integer
+        runNumber:
+          minimum: 0
+          type: integer
+        startTimestamp:
+          format: int64
+          type: integer
+        taskName:
+          type: string
+      type: object
+    ListRunsResponse:
+      properties:
+        runs:
+          items:
+            $ref: '#/components/schemas/TaskrunnerTaskRun'
+          type: array
+      required:
+      - runs
+      type: object
+    ListTasksResponse:
       properties:
         tasks:
           items:

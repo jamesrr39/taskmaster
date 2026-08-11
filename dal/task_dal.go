@@ -182,8 +182,8 @@ func (d *TaskDAL) GetTaskLatestRuns(dbConn db.DBConn, limit uint) ([]*taskrunner
 		LEFT JOIN task_runs_results trr
 		ON tr.task_name = trr.task_name
 		AND tr.task_run_number = trr.task_run_number
-		ORDER BY tr.end_time, tr.start_time DESC, tr.task_name ASC
-		LIMIT $2;
+		ORDER BY trr.end_time, tr.start_time DESC, tr.task_name ASC
+		LIMIT $1;
 		`,
 		limit,
 	)

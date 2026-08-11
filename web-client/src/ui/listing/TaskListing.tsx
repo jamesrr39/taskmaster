@@ -24,7 +24,7 @@ function TaskListing() {
                 <thead>
                     <tr>
                         <th>Name</th>
-                        <th>Compression</th>
+                        <th>Description</th>
                         <th>Script</th>
                     </tr>
                 </thead>
@@ -33,7 +33,7 @@ function TaskListing() {
                     return (
                         <tr key={idx}>
                             <td>{task.name}</td>
-                            <td>{task.log.compression}</td>
+                            <td>{task.description}</td>
                             <td><pre style={{alignItems: 'left'}}>{task.script}</pre></td>
                         </tr>
                     )

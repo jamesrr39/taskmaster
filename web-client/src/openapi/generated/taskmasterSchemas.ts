@@ -3,17 +3,34 @@
  *
  * @version 0
  */
-export type TaskrunnerLogConfig = {
-  compression: string;
-};
-
 export type TaskrunnerTask = {
   description?: string;
-  log: TaskrunnerLogConfig;
   name?: string;
   script?: string;
 };
 
-export type ListProjectsResponse = {
+export type TaskrunnerTaskRun = {
+  /**
+   * @format int64
+   */
+  endTimestamp?: number | null;
+  exitCode?: number | null;
+  pid?: number | null;
+  /**
+   * @minimum 0
+   */
+  runNumber?: number;
+  /**
+   * @format int64
+   */
+  startTimestamp?: number;
+  taskName?: string;
+};
+
+export type ListRunsResponse = {
+  runs: TaskrunnerTaskRun[];
+};
+
+export type ListTasksResponse = {
   tasks: TaskrunnerTask[];
 };

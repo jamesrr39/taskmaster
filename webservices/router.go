@@ -11,12 +11,13 @@ import (
 	"github.com/swaggest/rest/response/gzip"
 
 	"github.com/jamesrr39/taskmaster/dal"
+	"github.com/jamesrr39/taskmaster/db"
 	"github.com/swaggest/swgui/v3cdn"
 )
 
-func CreateRouter(taskDAL *dal.TaskDAL, baseDir string) (*chirouter.Wrapper, *openapi.Collector) {
+func CreateRouter(taskDAL *dal.TaskDAL, baseDir string, dbConn db.DBConn) (*chirouter.Wrapper, *openapi.Collector) {
 
-	apiSchema, apiRouter := CreateApiRouter(taskDAL, baseDir)
+	apiSchema, apiRouter := CreateApiRouter(taskDAL, baseDir, dbConn)
 
 	rootRouter := chirouter.NewWrapper(chi.NewRouter())
 

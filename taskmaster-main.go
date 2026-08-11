@@ -17,6 +17,7 @@ import (
 	"github.com/jamesrr39/taskmaster/db"
 	"github.com/jamesrr39/taskmaster/taskrunner"
 	"github.com/jamesrr39/taskmaster/webservices"
+	"github.com/jmoiron/sqlx"
 	"gopkg.in/alecthomas/kingpin.v2"
 
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -75,7 +76,7 @@ func setupGenerateOpenapiSpec() {
 	format := cmd.Flag("format", "output format").Short('F').Default(SpecFormatYAML).Enum(SpecFormatYAML, SpecFormatJSON, SpecFormatJSONPretty)
 	outputFilePath := cmd.Flag("output", "").Short('O').Default(os.Stdout.Name()).String()
 	cmd.Action(func(pc *kingpin.ParseContext) error {
-		apiSchema, _ := webservices.CreateApiRouter(nil, "")
+		apiSchema, _ := webservices.CreateApiRouter(nil, "", nil)
 
 		spec := apiSchema.Reflector().Spec
 
@@ -114,9 +115,19 @@ func setupServe() {
 	cmd.Action(func(pc *kingpin.ParseContext) error {
 		var err error
 
+		dbConn, err := getDBConn(*filePath)
+		if err != nil {
+			return errorsx.ErrWithStack(errorsx.Wrap(err))
+		}
+
+		err = db.RunMigrations(dbConn.DB)
+		if err != nil {
+			return errorsx.ErrWithStack(errorsx.Wrap(err))
+		}
+
 		taskDAL := dal.NewTaskDAL(*filePath, provideNow)
 
-		router, _ := webservices.CreateRouter(taskDAL, *filePath)
+		router, _ := webservices.CreateRouter(taskDAL, *filePath, dbConn)
 
 		server := &http.Server{
 			Addr:           *addr,
@@ -471,7 +482,7 @@ func makeHttpLink(s string) string {
 	return "http://" + s
 }
 
-func getDBConn(filePath string) (db.DBConn, errorsx.Error) {
+func getDBConn(filePath string) (*sqlx.DB, errorsx.Error) {
 	dbFilePath := filepath.Join(filePath, dal.DataFolderName, "taskmaster-db.sqlite3")
 
 	dbConn, err := db.OpenDB(dbFilePath)
