@@ -10,6 +10,13 @@ paths:
   /v1/runs:
     get:
       operationId: getRuns
+      parameters:
+      - in: query
+        name: limit
+        schema:
+          default: 10000
+          minimum: 0
+          type: integer
       responses:
         "200":
           content:

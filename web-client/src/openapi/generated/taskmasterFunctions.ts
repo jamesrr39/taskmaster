@@ -9,9 +9,19 @@ import type * as Fetcher from "./taskmasterFetcher";
 import { taskmasterFetch } from "./taskmasterFetcher";
 import type * as Schemas from "./taskmasterSchemas";
 
+export type GetRunsQueryParams = {
+  /**
+   * @default 10000
+   * @minimum 0
+   */
+  limit?: number;
+};
+
 export type GetRunsError = Fetcher.ErrorWrapper<undefined>;
 
-export type GetRunsVariables = TaskmasterContext["fetcherOptions"];
+export type GetRunsVariables = {
+  queryParams?: GetRunsQueryParams;
+} & TaskmasterContext["fetcherOptions"];
 
 export const fetchGetRuns = (
   variables: GetRunsVariables,
@@ -22,7 +32,7 @@ export const fetchGetRuns = (
     GetRunsError,
     undefined,
     {},
-    {},
+    GetRunsQueryParams,
     {}
   >({ url: "/v1/runs", method: "get", ...variables, signal });
 
