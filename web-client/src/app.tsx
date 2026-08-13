@@ -40,9 +40,16 @@ export function App() {
   );
 }
 
+const styles = {
+  leftAlign: {
+    textAlign: 'left'
+  }
+}
+
 function LoadedApp() {
   return (
     <div className="container">
+      <p style={styles.leftAlign}><a href="/tasks">Tasks</a> | <a href="/runs">Runs</a></p>
       <Router>
         <Route path="/tasks" component={TaskListing} />
         <Route path="/runs" component={RunListing} />

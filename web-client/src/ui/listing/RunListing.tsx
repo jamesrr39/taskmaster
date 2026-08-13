@@ -19,7 +19,7 @@ function RunListing() {
 
   return (
     <div>
-      <h1>Tasks</h1>
+      <h1>Runs</h1>
       <table className={"table table-striped"}>
         <thead>
           <tr>
