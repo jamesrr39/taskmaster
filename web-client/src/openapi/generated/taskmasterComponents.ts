@@ -36,7 +36,7 @@ export const fetchGetRuns = (
     {}
   >({ url: "/v1/runs", method: "get", ...variables, signal });
 
-export const useGetRuns = <TData = Schemas.ListRunsResponse,>(
+export const useGetRuns = <TData = Schemas.ListRunsResponse>(
   variables: GetRunsVariables,
   options?: Omit<
     reactQuery.UseQueryOptions<Schemas.ListRunsResponse, GetRunsError, TData>,
@@ -75,7 +75,7 @@ export const fetchGetTasks = (
     {}
   >({ url: "/v1/tasks", method: "get", ...variables, signal });
 
-export const useGetTasks = <TData = Schemas.ListTasksResponse,>(
+export const useGetTasks = <TData = Schemas.ListTasksResponse>(
   variables: GetTasksVariables,
   options?: Omit<
     reactQuery.UseQueryOptions<Schemas.ListTasksResponse, GetTasksError, TData>,

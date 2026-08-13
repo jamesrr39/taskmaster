@@ -10,8 +10,7 @@ export type TaskmasterFetcherExtraProps = {
 const baseUrl = "/api";
 
 export type ErrorWrapper<TError> =
-  | TError
-  | { status: "unknown"; payload: string };
+  TError | { status: "unknown"; payload: string };
 
 export type TaskmasterFetcherOptions<
   TBody,

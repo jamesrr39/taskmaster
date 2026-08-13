@@ -7,19 +7,16 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "generate-openapi": "openapi-codegen gen taskmaster"
+    "generate-openapi": "openapi-codegen gen taskmaster",
+    "lint:fix": "prettier --write src"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.51.21",
     "bootstrap": "^5.3.6",
     "bootstrap-icons": "^1.13.1",
-    "chart.js": "^4.4.6",
-    "maplibre-gl": "^4.6.0",
-    "pmtiles": "^3.0.7",
     "preact": "^10.22.1",
     "preact-iso": "^2.6.3",
     "preact-render-to-string": "^6.5.7",
-    "protomaps-themes-base": "^3.1.0",
     "react": "npm:@preact/compat@*",
     "react-chartjs-2": "^5.2.0",
     "react-select": "^5.10.1"
@@ -33,6 +30,7 @@
     "@types/babel__core": "^7",
     "@types/bootstrap": "^5",
     "babel-plugin-transform-hook-names": "^1.0.2",
+    "prettier": "^3.9.6",
     "typescript": "^5.2.2",
     "vite": "^5.3.4",
     "yoga-layout-prebuilt": "^1.10.0"
