@@ -14,9 +14,15 @@ before:
     - go mod tidy
     # you may remove this if you don't need go generate
     - go generate ./...
+    # build static bundle
+    - sh -c 'cd web-client && yarn build'
+    # move static bundle to embed dir
+    - sh -c 'rm -rf webservices/static_bundle && cp -r web-client/dist webservices/static_bundle'
 
 builds:
-  - env:
+  - tags:
+      - prod
+    env:
       - CGO_ENABLED=0
     goos:
       - linux

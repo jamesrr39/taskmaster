@@ -16,3 +16,5 @@ vite.config.ts.timestamp-*.mjs
 telemetry.json
 
 /data/
+
+/webservices/static_bundle
