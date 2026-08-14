@@ -34,7 +34,7 @@ function TaskListing() {
                 <td>{task.name}</td>
                 <td>{task.description}</td>
                 <td>
-                  <pre style={{ alignItems: "left" }}>{task.script}</pre>
+                  <pre style={{ textAlign: "left" }}>{task.script}</pre>
                 </td>
               </tr>
             );
